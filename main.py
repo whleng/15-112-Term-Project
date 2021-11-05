@@ -1,4 +1,9 @@
-# This is the main function
+# This is the main function 
+# This is another comment
+
+def function(x):
+    return True
+    
 from cmu_112_graphics import *
 
 class Player(object):
@@ -8,7 +13,6 @@ class Player(object):
 class Item(object):
     def __init__(self):
         pass
-
 
 # returns the value of game dimensions
 def gameDimensions():
