@@ -6,7 +6,8 @@ class Player(object):
         self.row, self.col = 0, 0
 
 class Item(object):
-    def __init__(self, )
+    def __init__(self):
+        pass
 
 
 # returns the value of game dimensions
