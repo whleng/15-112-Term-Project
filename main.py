@@ -29,7 +29,11 @@ class Bullet(object):
         self.row, self.col = row, col
         self.dir = dir
 
-    def collision(self):
+    def checkCollision(self, enemyList):
+        for enemy in enemyList:
+            if self.row == enemy.row and self.col == enemy.col:
+                enemyList.remove(enemy)
+        return enemyList
         # collision with wall occurs when bullet hits wall 
         pass
 
@@ -118,7 +122,8 @@ def timerFired(app):
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
-
+        app.roomEnemies = bullet.checkCollision(app.roomEnemies)
+    
 # draws every individual cell in the board
 def drawBoard(app, canvas):
     for row in range(app.rows):
