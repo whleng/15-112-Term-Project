@@ -10,35 +10,39 @@ class Player(object):
         self.speed = 10 
         self.xp = 10
         self.items = dict()
+        self.bullets = []
+        self.dir = None
 
-    def jump():
+    def jump(self):
         # skip one box when moving in a particular direction
         pass 
 
-    def attack():
+    def attack(self):
+        bullet = Bullet(self.row, self.col, self.dir)
+        self.bullets.append( bullet )
         # generate bullets in the direction it is facing
         # bullets will keep moving with decreasing velocity 
         # player will recoil when shooting bullets
-        pass
     
 class Bullet(object):
-    def __init__(self, row, col, direction):
+    def __init__(self, row, col, dir):
         self.row, self.col = row, col
-        self.direction = direction
+        self.dir = dir
+
+    def collision(self):
+        # collision with wall occurs when bullet hits wall 
+        pass
 
 class Enemy(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
         self.color = "red"
 
-    def followPlayer(self, playerRow, playerCol, startTime):
-        currTime = time.time()
-        if currTime - startTime > 1:
-            if self.row > playerRow: self.row -= 1
-            elif self.row < playerRow: self.row += 1
-            if self.col > playerCol: self.col -= 1
-            elif self.col < playerCol: self.col += 1
-            return True
+    def followPlayer(self, playerRow, playerCol):
+        if self.row > playerRow: self.row -= 1
+        elif self.row < playerRow: self.row += 1
+        if self.col > playerCol: self.col -= 1
+        elif self.col < playerCol: self.col += 1
 
     def attackPlayer(self, playerRow, playerCol, app):
         pass
@@ -64,6 +68,8 @@ def appStarted(app):
     app.roomItems = []
     app.walls, app.wallsCoords = createWalls()
     app.startTime = time.time()
+    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    # "Up", "Right", "Down", "Left"
 
 # returns the value of game dimensions
 def gameDimensions():
@@ -83,14 +89,16 @@ def createWalls():
 def keyPressed(app, event):
     arrowKeys = ["Up", "Right", "Down", "Left"]
     if event.key in arrowKeys:
-        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-        drow = directions[arrowKeys.index(event.key)][0]
-        dcol = directions[arrowKeys.index(event.key)][1]
+        drow = app.directions[arrowKeys.index(event.key)][0]
+        dcol = app.directions[arrowKeys.index(event.key)][1]
         playerRow = app.player.row + drow
         playerCol = app.player.col + dcol
         if isLegalMove(app, playerRow, playerCol):
             app.player.row = playerRow
             app.player.col = playerCol
+            app.player.dir = (drow, dcol)
+    elif event.key == "Space":
+        app.player.attack()
 
 def isLegalMove(app, playerRow, playerCol):
     if ((playerRow, playerCol) in app.wallsCoords or
@@ -101,7 +109,15 @@ def isLegalMove(app, playerRow, playerCol):
     else: return True
 
 def timerFired(app):
-    pass    
+    currTime = time.time()
+    if currTime - app.startTime > 1:
+        for enemy in app.roomEnemies:
+            enemy.followPlayer(app.player.row, app.player.col)
+        app.startTime = time.time()
+    for bullet in app.player.bullets:
+        drow, dcol = bullet.dir
+        bullet.row += drow
+        bullet.col += dcol
 
 # draws every individual cell in the board
 def drawBoard(app, canvas):
@@ -128,16 +144,15 @@ def drawWalls(app, canvas):
     for wall in app.walls:
         drawCell(app, canvas, wall.row, wall.col, wall.color)
 
+def drawBullets(app, canvas):
+    for bullet in app.player.bullets:
+        drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
 def redrawAll(app, canvas):
     drawBoard(app, canvas)
     drawWalls(app, canvas)
     drawPlayer(app, canvas)
+    drawBullets(app, canvas)
     drawEnemies(app, canvas)
-    for enemy in app.roomEnemies:
-        result = enemy.followPlayer(app.player.row, app.player.col, app.startTime)
-        if result != None:
-            app.startTime = time.time()
-            # MVC violation, may not change time here
-
+    
 runApp(width=400, height=400)
