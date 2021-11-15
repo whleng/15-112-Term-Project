@@ -63,14 +63,16 @@ class Item(object):
 
     def collected(self, player):
         player.items[self.name] = player.items.get(self.name, 0) + 1
-        
+
+    
+
 def appStarted(app):
     app.player = Player()
     app.rows, app.cols, app.cellSize, app.margin = gameDimensions()
     app.board = [ ["white"] *  app.cols for i in range(app.rows)]
     app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
     app.roomItems = []
-    app.walls, app.wallsCoords = createWalls()
+    app.walls, app.wallsCoords = createWalls(app)
     app.startTime = time.time()
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     # "Up", "Right", "Down", "Left"
@@ -81,14 +83,55 @@ def gameDimensions():
     # game dimensions can be changed here
     return (rows, cols, cellSize, margin)
 
-def createWalls():
+def createWalls(app):
+    # walls = set()
+    # wallsCoords = set()
+    # for _ in range(10):
+    #     wall = Wall(random.randint(0,19), random.randint(0, 19))
+    #     walls.add(wall)
+    #     wallsCoords.add((wall.row, wall.col))
+    # return walls, wallsCoords
+
     walls = set()
     wallsCoords = set()
-    for _ in range(10):
-        wall = Wall(random.randint(0,19), random.randint(0, 19))
-        walls.add(wall)
-        wallsCoords.add((wall.row, wall.col))
+    while len(walls) < 11:
+        wallRow, wallCol = random.randint(0,19), random.randint(0, 19)
+        wallSet, wallSetCoords = placeWall(wallRow, wallCol, app.board)
+        if wallSet != None and wallSetCoords != None:
+            walls.union(wallSet)
+            wallsCoords.union(wallSetCoords)
     return walls, wallsCoords
+
+def placeWall(row, col, board):
+        wallSetSize = 4
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        wallSet, wallSetCoords = [], []
+        if checkCellEmpty(row, col, board):
+                for dir in directions:
+                    wallList = checkEmptyFromDirection(row, col, board, dir, wallSetSize)
+                    if wallList != None:
+                        for (wallRow, wallCol) in wallList:
+                            wallSetCoords.append( (wallRow, wallCol) )
+                            wall = Wall(wallRow, wallCol)
+                            wallSet.append(wall)
+                        return (wallSet, wallSetCoords)
+        return None
+        # if there is nothing in four areas around it, then place wall in a random direction
+        # place wall in a set of 4 
+        
+def checkCellEmpty(row, col, board):
+    return board[row][col] == "white"
+
+def checkEmptyFromDirection(row, col, board, dir, wallSetSize):
+    drow, dcol = dir
+    wallList = [(row, col)]
+    for i in range(wallSetSize):
+        newRow = row + drow * i
+        newCol = col + dcol * i
+        if not checkCellEmpty(newRow, newCol, board): 
+            return None
+        wallList.append( (newRow, newCol) )
+    return wallList
 
 def keyPressed(app, event):
     arrowKeys = ["Up", "Right", "Down", "Left"]

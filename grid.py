@@ -1,3 +1,61 @@
+
+
+class Graph(object):
+    def __init__(self):
+        self.table = dict() # dict storing the nodes and edges
+
+    # add an edge between two nodes in the graph
+    def addEdge(self, nodeA, nodeB, weight=1):
+        if nodeA not in self.table:
+            self.table[nodeA] = dict()
+        if nodeB not in self.table:
+            self.table[nodeB] = dict()
+        self.table[nodeA][nodeB] = weight
+        self.table[nodeB][nodeA] = weight
+
+    # return weight of an edge between two nodes
+    def getEdge(self, nodeA, nodeB):
+        return self.table[nodeA][nodeB]
+
+    # return list of all nodes in the graph
+    def getNodes(self):
+        return list(self.table)
+
+    def getNeighbours(self, node):
+        return set(self.table[node])
+
+def dfs():
+    visited = set()
+    graph = Graph()
+    graph.addEdge((0,0), (0,1))
+    graph.addEdge((0,1), (1,1))
+    graph.addEdge((1,1), (1,2))
+    graph.addEdge((1,1), (2,1))
+    graph.addEdge((1,2), (2,2))
+    graph.addEdge((2,1), (2,2))
+    graph.addEdge((2,1), (2,0))
+    print("start graph: ", graph)
+    solution = set()
+    startNode = (0,0)
+    targetNode = (2,0)
+    solution = solve(startNode, targetNode, graph, visited, solution)
+    print("solution: ", solution)
+
+def solve(startNode, targetNode, graph, visited, solution):
+    if startNode == targetNode:
+        return solution
+    visited.add(startNode)
+    for neighbour in graph.getNeighbours(startNode):
+        if neighbour not in visited:
+            solution.add(neighbour)
+            solution = solve(neighbour, targetNode, graph, visited, solution)
+            print(solution)
+            if solution != None: return solution
+            solution.pop(neighbour)
+    return None
+
+dfs()
+
 def bfs(board):
     # conversion of board to graph
     nodes = set()
