@@ -107,16 +107,16 @@ def getNeighbours(app, rows, cols, row, col, visited):
     unvisitedNeighbours = set()
     for dir in app.directions:
         drow, dcol = dir
-        row, col = row+drow, col+dcol
-        if (0 <= row < rows and 
-            0 <= col < cols):
-            if ((row,col) not in visited):
-                unvisitedNeighbours.add( (row, col) )
+        newRow, newCol = row+drow, col+dcol
+        if (0 <= newRow < rows and 
+            0 <= newCol < cols):
+            if ((newRow,newCol) not in visited):
+                unvisitedNeighbours.add( (newRow, newCol) )
             else: 
-                visitedNeighbours.add( (row, col))
-        row, col = row-drow, row-dcol
+                visitedNeighbours.add( (newRow, newCol))
     return visitedNeighbours, unvisitedNeighbours
 
+# draw graph works
 def drawGraph(app, canvas, graph):
     # graph is an instance of the Graph class
     unvisitedCells = set()
@@ -128,8 +128,12 @@ def drawGraph(app, canvas, graph):
         visitedCells.add(node)
         _, neighbours = getNeighbours(app, app.rows, app.cols, 
                             node[0], node[1], visitedCells)
+        print(neighbours)
         for neighbour in neighbours:
-            if neighbour not in graph.table[node]:
+            print(neighbour)
+            # if neighbour does not have a connected edge to the node
+            if (node not in graph.table or 
+                neighbour not in graph.getNeighbours(node)):
                 drawWall(app, canvas, node, neighbour)
         unvisitedCells = set.union(neighbours, unvisitedCells)
 
@@ -140,9 +144,9 @@ def drawWall(app, canvas, node, neighbour):
     neighbourRow, neighbourCol = neighbour
     if nodeRow == neighbourRow:
         if nodeCol > neighbourCol: # node is on the right of the neighbour
-            x0, y0, x1, y1 = getCellBounds(node)
+            x0, y0, x1, y1 = getCellBounds(app, node)
         else:  
-            x0, y0, x1, y1 = getCellBounds(neighbour) # neighbour on right
+            x0, y0, x1, y1 = getCellBounds(app, neighbour) # neighbour on right
         line = x0, y0, x0, y0 + app.cellHeight
     elif nodeCol == neighbourCol:
         if nodeRow > neighbourRow: # node is on bottom of neighbour
@@ -156,7 +160,7 @@ def drawWall(app, canvas, node, neighbour):
 # cited from 
 # http://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
 def getCellBounds(app, node):
-    row, col = node.row, node.col
+    row, col = node
     gridWidth  = app.width - 2*app.margin
     gridHeight = app.height - 2*app.margin
     cellWidth = gridWidth / app.cols
