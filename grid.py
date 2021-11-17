@@ -25,18 +25,19 @@ class Graph(object):
     def getNeighbours(self, node):
         return set(self.table[node])
 
+# have yet to integrate the node as an object inside 
 class Node(object):
     def __init__(self, row, col):
         self.row = row
         self.col = col
 
-# make the node an object too
-
 # dfs works, for pathfinding, 
 # but only finds one path, not the shortest path yet
 
-def dfs():
+def dfs(graph, startNode, targetNode):
     visited = set()
+    '''
+    ### testing graph ### 
     graph = Graph()
     graph.addEdge((0,0), (0,1))
     graph.addEdge((0,1), (1,1))
@@ -45,15 +46,17 @@ def dfs():
     graph.addEdge((2,1), (2,2))
     graph.addEdge((2,1), (2,0))
     print("start graph: ", graph)
+    '''
     # solution = set()
     solution = dict()
-    startNode = (0,0)
-    targetNode = (2,0)
+    # startNode = (0,0)
+    # targetNode = (5,5)
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, targetNode)
+    return solution # a list of coordinates
     print("solution: ", solution)
 
-def constructPath(solution, targetNode): # in reverse direction
+def constructPath(solution, targetNode): 
     currNode = targetNode
     path = [currNode]
     while True:
@@ -61,7 +64,7 @@ def constructPath(solution, targetNode): # in reverse direction
         path.append(prevNode)
         currNode = prevNode
         if currNode == (0,0): break
-    return path
+    return list(reversed(path))
 
 def solve(startNode, targetNode, graph, visited, solution):
     if startNode == targetNode:
@@ -71,7 +74,7 @@ def solve(startNode, targetNode, graph, visited, solution):
         if neighbour not in visited:
             solution[neighbour] = startNode
             # solution.add(neighbour)
-            print(startNode, neighbour, solution)
+            # print(startNode, neighbour, solution)
             tempsol = solve(neighbour, targetNode, graph, visited, solution)
             if tempsol != None: return tempsol
             # solution.remove(neighbour)
@@ -80,18 +83,23 @@ def solve(startNode, targetNode, graph, visited, solution):
 
 # dfs() # uncomment to test dfs
 
-# prim's algo for maze generation (within a room + whole map)
-def prim():
+import random 
+
+# prim's algo for maze generation, works
+# can be used (within a room + whole map)
+def prim(app):
     startNode = (0,0)
     cells = set() # set of cells
     visited = set()
     cells.add(startNode)
     graph = Graph()
     while len(cells) > 0:
-        cell = cells.pop() # get a random cell
+        # cell = cells.pop() # get a random cell
+        cell = random.choice(list(cells))
+        cells.remove(cell)
         visited.add(cell) # mark cell as visited
         row, col = cell
-        visitedNeighbours, unvisitedNeighbours = getNeighbours(board, row, col, visited) 
+        visitedNeighbours, unvisitedNeighbours = getNeighbours(app, app.rows, app.cols, row, col, visited) 
         # return visited neighbours
         if len(visitedNeighbours) > 0:
             neighbour = visitedNeighbours.pop()
@@ -147,13 +155,13 @@ def drawWall(app, canvas, node, neighbour):
             x0, y0, x1, y1 = getCellBounds(app, node)
         else:  
             x0, y0, x1, y1 = getCellBounds(app, neighbour) # neighbour on right
-        line = x0, y0, x0, y0 + app.cellHeight
+        line = x0, y0, x0, y0 + app.cellSize
     elif nodeCol == neighbourCol:
         if nodeRow > neighbourRow: # node is on bottom of neighbour
             x0, y0, x1, y1 = getCellBounds(app, node)
         else:  # neighbour at bottom
             x0, y0, x1, y1 = getCellBounds(app, neighbour)
-        line = x0, y0, x0 + app.cellWidth, y0
+        line = x0, y0, x0 + app.cellSize, y0
     canvas.create_line(line)
 
 # returns (x0, y0, x1, y1) corners/bounding box of given cell in grid
@@ -171,19 +179,30 @@ def getCellBounds(app, node):
     y1 = app.margin + (row+1) * cellHeight
     return (x0, y0, x1, y1)
     
-def appStarted(app):
-    app.margin = 0
-    app.rows, app.cols = 20, 20
-    app.cellHeight, app.cellWidth = app.height / app.rows, app.width / app.cols
-    app.graph = Graph()
-    app.graph.addEdge((0,0), (0,1))
-    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+# def appStarted(app):
+#     app.margin = 0
+#     app.rows, app.cols = 20, 20
+#     app.cellHeight, app.cellWidth = app.height / app.rows, app.width / app.cols
+#     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+#     app.graph = prim(app)
+#     app.path = dfs(app.graph)
+#     # app.graph = Graph()
+#     # app.graph.addEdge((0,0), (0,1))
+#     # app.graph.addEdge((0,1), (1,1))
 
-def redrawAll(app, canvas):
-    drawGraph(app, canvas, app.graph)
-    # canvas.create_line(1,1,100,100)
 
-runApp(width=400, height=400)
+# def drawCell(app, canvas, row, col, cellColor):
+#     x = app.margin + col * app.cellWidth
+#     y = app.margin + row * app.cellHeight
+#     canvas.create_oval(x, y, x + app.cellWidth, y + app.cellHeight,
+#                             fill=cellColor)
+
+# def redrawAll(app, canvas):
+#     drawGraph(app, canvas, app.graph)
+#     for (row, col) in app.path:
+#         drawCell(app, canvas, row, col, "red")
+
+# runApp(width=400, height=400)
 # loop through nodes in the graph 
 #   check the neighbours of this node
 #   if the node and the neighbour are not connected by an edge, draw a wall between them
@@ -215,7 +234,7 @@ def dijksrta():
     graph.addEdge((2,1), (2,2))
     graph.addEdge((2,1), (2,0))
     startNode = (0,0)
-    targetNode = (2,0)
+    targetNode = (10,0)
     visited = set()
     distance = dict() 
     solution = dict()

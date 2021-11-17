@@ -1,4 +1,5 @@
 from cmu_112_graphics import *
+from grid import *
 import random
 import time
 
@@ -70,12 +71,17 @@ def appStarted(app):
     app.player = Player()
     app.rows, app.cols, app.cellSize, app.margin = gameDimensions()
     app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-    app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
+    # app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
+    app.enemy = Enemy(5,5)
     app.roomItems = []
-    app.walls, app.wallsCoords = createWalls(app)
+    # app.walls, app.wallsCoords = createWalls(app)
     app.startTime = time.time()
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     # "Up", "Right", "Down", "Left"
+    app.graph = prim(app)
+    app.path = dfs(app.graph, (app.player.row, app.player.col), 
+                (app.enemy.row, app.enemy.col))
+    print(app.path)
 
 # returns the value of game dimensions
 def gameDimensions():
@@ -157,15 +163,20 @@ def isLegalMove(app, playerRow, playerCol):
 
 def timerFired(app):
     currTime = time.time()
+    
     if currTime - app.startTime > 1:
-        for enemy in app.roomEnemies:
-            enemy.followPlayer(app.player.row, app.player.col)
+        if app.path != []:
+            app.enemy.row, app.enemy.col = app.path.pop()
+        #for enemy in app.roomEnemies:
+        #    enemy.followPlayer(app.player.row, app.player.col)
         app.startTime = time.time()
+    '''
     for bullet in app.player.bullets:
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
         app.roomEnemies = bullet.checkCollision(app.roomEnemies)
+    '''
     
 # draws every individual cell in the board
 def drawBoard(app, canvas):
@@ -185,8 +196,10 @@ def drawPlayer(app, canvas):
     drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
 def drawEnemies(app, canvas):
-    for enemy in app.roomEnemies:
-        drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
+    enemy = app.enemy 
+    drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
+    #for enemy in app.roomEnemies:
+    #    drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
 
 def drawWalls(app, canvas):
     for wall in app.walls:
@@ -197,10 +210,15 @@ def drawBullets(app, canvas):
         drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
 def redrawAll(app, canvas):
+    drawGraph(app, canvas, app.graph)
+    drawPlayer(app, canvas)
+    drawEnemies(app, canvas)
+    #for (row, col) in app.path:
+    #        drawCell(app, canvas, row, col, "red")
+    '''
     drawBoard(app, canvas)
     drawWalls(app, canvas)
-    drawPlayer(app, canvas)
     drawBullets(app, canvas)
-    drawEnemies(app, canvas)
+    '''
     
 runApp(width=400, height=400)
