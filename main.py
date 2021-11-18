@@ -79,8 +79,10 @@ def appStarted(app):
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     # "Up", "Right", "Down", "Left"
     app.graph = prim(app)
-    app.path = dfs(app.graph, (app.player.row, app.player.col), 
-                (app.enemy.row, app.enemy.col))
+    # dfs takes in start node, target node
+    app.path = dfs(app.graph, 
+                (app.enemy.row, app.enemy.col),
+                (app.player.row, app.player.col))
     print(app.path)
 
 # returns the value of game dimensions
@@ -146,27 +148,38 @@ def keyPressed(app, event):
         dcol = app.directions[arrowKeys.index(event.key)][1]
         playerRow = app.player.row + drow
         playerCol = app.player.col + dcol
-        if isLegalMove(app, playerRow, playerCol):
+        if isLegalMove(app, app.player.row, app.player.col, playerRow, playerCol):
             app.player.row = playerRow
             app.player.col = playerCol
             app.player.dir = (drow, dcol)
     elif event.key == "Space":
         app.player.attack()
 
-def isLegalMove(app, playerRow, playerCol):
-    if ((playerRow, playerCol) in app.wallsCoords or
-        playerRow < 0 or playerRow >= app.rows or
-        playerCol < 0 or playerCol >= app.cols):
-        print("hit")
+def isLegalMove(app, prevPlayerRow, prevPlayerCol, playerRow, playerCol):
+    # if ((playerRow, playerCol) in app.wallsCoords or
+    #     playerRow < 0 or playerRow >= app.rows or
+    #     playerCol < 0 or playerCol >= app.cols):
+    # if the two nodes are connected by an edge then you can move there
+    if (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol)):
+        return True
+    else: 
+        print("cant pass")
         return False
-    else: return True
 
 def timerFired(app):
     currTime = time.time()
-    
+    player = app.player.row, app.player.col
+    print(player)
+    enemy = app.enemy.row, app.enemy.col
     if currTime - app.startTime > 1:
+        app.path = dfs(app.graph, enemy, player)
+        # app.path = dfs(app.graph, (app.player.row, app.player.col), 
+        #         (app.enemy.row, app.enemy.col))
+        app.path.pop()
+        print(app.path)
         if app.path != []:
             app.enemy.row, app.enemy.col = app.path.pop()
+            print("moved", app.enemy.row, app.enemy.col)
         #for enemy in app.roomEnemies:
         #    enemy.followPlayer(app.player.row, app.player.col)
         app.startTime = time.time()
@@ -189,7 +202,7 @@ def drawBoard(app, canvas):
 def drawCell(app, canvas, row, col, cellColor):
     x = app.margin + col * app.cellSize
     y = app.margin + row * app.cellSize
-    canvas.create_rectangle(x, y, x + app.cellSize, y + app.cellSize,
+    canvas.create_oval(x, y, x + app.cellSize, y + app.cellSize,
                             fill=cellColor)
 
 def drawPlayer(app, canvas):

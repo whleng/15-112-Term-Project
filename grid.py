@@ -1,5 +1,5 @@
 from cmu_112_graphics import *
-
+# referenced from TA lecture: Graph Algorithm
 # generic graph object
 class Graph(object):
     def __init__(self):
@@ -33,7 +33,7 @@ class Node(object):
 
 # dfs works, for pathfinding, 
 # but only finds one path, not the shortest path yet
-
+# referenced from TA lecture: Graph Algorithm
 def dfs(graph, startNode, targetNode):
     visited = set()
     '''
@@ -52,18 +52,19 @@ def dfs(graph, startNode, targetNode):
     # startNode = (0,0)
     # targetNode = (5,5)
     solution = solve(startNode, targetNode, graph, visited, solution)
-    solution = constructPath(solution, targetNode)
+    solution = constructPath(solution, startNode, targetNode)
     return solution # a list of coordinates
     print("solution: ", solution)
 
-def constructPath(solution, targetNode): 
+def constructPath(solution, startNode, targetNode): 
     currNode = targetNode
     path = [currNode]
     while True:
         prevNode = solution[currNode] 
         path.append(prevNode)
         currNode = prevNode
-        if currNode == (0,0): break
+        if currNode == startNode: break
+    return path
     return list(reversed(path))
 
 def solve(startNode, targetNode, graph, visited, solution):
@@ -87,6 +88,9 @@ import random
 
 # prim's algo for maze generation, works
 # can be used (within a room + whole map)
+# referenced from 
+# https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
+# and https://hurna.io/academy/algorithms/maze_generator/prim_s.html
 def prim(app):
     startNode = (0,0)
     cells = set() # set of cells
@@ -106,6 +110,13 @@ def prim(app):
             graph.addEdge(neighbour, cell) 
             # randomly connect the cell to a neighbour which has been visited
         cells = set.union(cells, unvisitedNeighbours) # add unvisited neighbour to the set
+    # to create more paths, randomly add in some edges
+    # however, adding this will cause the dfs to not work
+    # for i in range(100):
+    #     cell = random.randint(0, app.rows), random.randint(0, app.cols)
+    #     (drow, dcol) = random.choice(app.directions)
+    #     neighbour = cell[0] + drow, cell[1] + dcol
+    #     graph.addEdge(neighbour, cell)
     return graph
 
 # obtaining 4 cells connected to it 
@@ -136,9 +147,9 @@ def drawGraph(app, canvas, graph):
         visitedCells.add(node)
         _, neighbours = getNeighbours(app, app.rows, app.cols, 
                             node[0], node[1], visitedCells)
-        print(neighbours)
+        #print(neighbours)
         for neighbour in neighbours:
-            print(neighbour)
+            #print(neighbour)
             # if neighbour does not have a connected edge to the node
             if (node not in graph.table or 
                 neighbour not in graph.getNeighbours(node)):
@@ -218,7 +229,7 @@ def getCellBounds(app, node):
 
 
 ####################################################
-# Things that don't really work
+# Code that doesn't work
 ####################################################
 
 from queue import PriorityQueue
@@ -260,7 +271,7 @@ def dijksrta():
                 visited.add(neighbour)
         pq.pop(currNode)
     print("done")
-    print(solution)
+    #print(solution)
 
 # dijksrta()
 
