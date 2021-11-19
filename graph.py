@@ -53,6 +53,7 @@ def dfs(graph, startNode, targetNode):
     # targetNode = (5,5)
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
+    print("sol:", solution)
     return solution # a list of coordinates
     print("solution: ", solution)
 

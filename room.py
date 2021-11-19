@@ -14,15 +14,19 @@ def appStarted(app):
 def createRoomGraph(app):
     # using wall positions to create a graph
     graph = Graph()
+    visited = set()
     for row in range(app.rows):
         for col in range(app.cols):
             cell = row, col
+            visited.add(cell)
             if cell not in app.wallsCoords: # if the cell is not a wall
-                neighbours = getNeighbours(app, row, col, app.rows, app.cols, set())
+                _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, visited)
                 for neighbour in neighbours: 
                     if neighbour not in app.wallsCoords: # if neighbour is not a wall
+                        visited.add(neighbour)
+                        print("neighbour: ", neighbour)
                         graph.addEdge(cell, neighbour) 
-    return graph()
+    return graph
 
 
 def createWalls(app):

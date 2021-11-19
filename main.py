@@ -12,6 +12,7 @@ import time
 def appStarted(app):
     app.mode = "roomMode" # modes: mazeMode, roomMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
+    
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
@@ -36,9 +37,17 @@ def appStarted(app):
     elif app.mode == "roomMode":
         app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-        app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
+        # app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
+        app.enemy = Enemy(8,8) # should make it smartly generate not in a wall
         app.roomItems = []
         app.walls, app.wallsCoords = createWalls(app)
+        print("start graph")
+        app.graph = createRoomGraph(app)
+        print(app.graph.table)
+        print(app.graph.getNeighbours((1,4)))
+        app.path = dfs(app.graph, (app.enemy.row, app.enemy.col),
+                        (app.player.row, app.player.col) )
+        print(app.path)
 
 
 #########################################################
@@ -90,7 +99,7 @@ def splashscreenMode_redrawAll(app, canvas):
 
 # returns the value of game dimensions
 def gameDimensions():
-    rows, cols, cellSize, margin = 20, 20, 20, 0 
+    rows, cols, cellSize, margin = 10, 10, 20, 0 
     # game dimensions can be changed here
     return (rows, cols, cellSize, margin)
 
@@ -113,11 +122,13 @@ def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=Non
     if app.mode == "roomMode":
         return (0 <= playerRow < app.rows and
                 0 <= playerCol < app.cols and
-                (playerRow, playerCol) in app.wallsCoords)
+                (playerRow, playerCol) not in app.wallsCoords)
     elif app.mode == "mazeMode":
         return (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol))
+    return False
 
 def convertDirections(app, dir):
+    print(dir)
     if dir in app.directions: # in drow, dcol form
         return app.arrowKeys[app.directions.index(dir)]
     elif dir in app.arrowKeys: # in arrow key form
@@ -136,6 +147,9 @@ def playerControls(app, event):
     elif event.key == "Space":
         app.player.attack()
 
+
+# cited from 
+# http://www.cs.cmu.edu/~112/notes/notes-graphics.html#installingModules
 def createPlayerSprites(app):
     spriteRight = app.loadImage(r"Graphics/walkingRight.png")
     spriteLeft = app.loadImage(r"Graphics/walkingLeft.png")
@@ -143,17 +157,19 @@ def createPlayerSprites(app):
     for i in range(9):
         sprite = spriteRight.crop((i*(45+18), 0, i*(45+18)+45, 63))
         app.playerSprites['Right'].append(sprite)
+        app.playerSprites['Up'].append(sprite)
+        app.playerSprites['Down'].append(sprite)
         sprite = spriteLeft.crop((i*(45+18), 0, i*(45+18)+45, 62))
         app.playerSprites['Left'].append(sprite)
     app.playerSpriteCounter = 0
 
 def drawPlayer(app, canvas):
     # draw player sprite
-    sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
-    x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
-    cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
+    # x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
+    # cx, cy = (x0+x1)//2, (y0+y1)//2
+    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    # canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     # draw basic player
     drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
@@ -255,7 +271,7 @@ def roomMode_timerFired(app):
     if currTime - app.startTime > 1:
         app.path = dfs(app.graph, enemy, player)
         app.path.pop()
-        print(app.path)
+        print("path: ", app.path)
         if app.path != []:
             app.enemy.row, app.enemy.col = app.path.pop()
             print("moved", app.enemy.row, app.enemy.col)
@@ -291,12 +307,14 @@ def drawBoard(app, canvas):
                 drawCell(app, canvas, row, col, cellColor) 
 
 def drawRoomWalls(app, canvas):
-    for wall in app.wallsCoords:
-        ## draw walls using sprite
+    for wall in app.walls:
+        ## draw walls using sprite, need to loop through wall in wall coords
         # x0, y0, x1, y1 = getCellBounds(app, wall)
         # cx, cy = (x0+x1)//2, (y0+y1)//2
         # wallSprite = app.wallSprite.resize( (int(x1-x0), int(y1-y0)) )
         # canvas.create_image(cx, cy, image=ImageTk.PhotoImage(wallSprite))
+
+        # draw wall as a circle, loop through wall in walls
         drawCell(app, canvas, wall.row, wall.col, wall.color)
 
 def drawBullets(app, canvas):
@@ -307,8 +325,8 @@ def drawBullets(app, canvas):
 def roomMode_redrawAll(app, canvas):
     # drawBoard(app, canvas)
     drawRoomWalls(app, canvas)
-    # drawPlayer(app, canvas)
-    # drawEnemies(app, canvas)
+    drawPlayer(app, canvas)
+    drawEnemies(app, canvas)
     # drawBullets(app, canvas)
 
 runApp(width=800, height=600)
