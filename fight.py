@@ -5,9 +5,9 @@ import random
 
 class State(object):
     def __init__(self):
-        print("Current state: ", str(self))
+        print("Current state: ", repr(self))
 
-    def __rep__(self):
+    def __repr__(self):
         return self.__class__.__name__
         
     def on_event(self, event):
@@ -16,16 +16,27 @@ class State(object):
         pass
 
 class idleState(State):
-    def on_event(self, event):
-        pass
+    def on_event(self, event, boss):
+        print("idle")
+        if event == "player moves":
+            return attackState()
+        return self
 
 class attackState(State):
-    def on_event(self, event):
-        pass
-
+    def on_event(self, event, boss):
+        print("attack")
+        if event == "low health" or event == "player attacks":
+            return defendState()
+        # shoot at player
+        return self
+            
 class defendState(State):
-    def on_event(self, event):            
-        pass
+    def on_event(self, event, boss):    
+        print("defend")        
+        if event == "player stops attack":
+            return attackState()
+        # move away from player
+        return self
 
 class Boss(object):
     def __init__ (self, maxWidth, maxHeight):
@@ -38,7 +49,18 @@ class Boss(object):
 
     def on_event(self, event):
         # assigns the event to the particular state it is in
-        self.state = self.state.on_event(event)
+        self.state = self.state.on_event(event, self)
+
+
+def runGame():
+    boss = Boss(10, 10)
+    boss.on_event("player moves")
+    boss.on_event("player attacks")
+
+runGame()
+
+###############################################################
+
 
 # determines the final position of two objects after collision
 def collision(a, b):
