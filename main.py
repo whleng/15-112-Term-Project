@@ -17,7 +17,9 @@ def appStarted(app):
         createButtons(app)
 
     app.player = Player()
+    createPlayerSprites(app)
     app.startTime = time.time()
+    app.arrowKeys = ["Up", "Right", "Down", "Left"]
     # "Up", "Right", "Down", "Left"
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     app.rows, app.cols, app.cellSize, app.margin = gameDimensions()
@@ -109,20 +111,50 @@ def getCellBounds(app, node):
 
 def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=None):
     if app.mode == "roomMode":
-        if ((playerRow, playerCol) in app.wallsCoords or
-         playerRow < 0 or playerRow >= app.rows or
-         playerCol < 0 or playerCol >= app.cols):
-            return False
-        else: 
-            return True
+        return (0 <= playerRow < app.rows and
+                0 <= playerCol < app.cols and
+                (playerRow, playerCol) in app.wallsCoords)
     elif app.mode == "mazeMode":
-        if (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol)):
-            return True
-        else: 
-            print("cant pass")
-            return False
- 
+        return (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol))
+
+def convertDirections(app, dir):
+    if dir in app.directions: # in drow, dcol form
+        return app.arrowKeys[app.directions.index(dir)]
+    elif dir in app.arrowKeys: # in arrow key form
+        return app.directions[app.arrowKeys.index(dir)]
+
+def playerControls(app, event):
+    app.playerSpriteCounter = (1 + app.playerSpriteCounter) % len(app.playerSprites[convertDirections(app, app.player.dir)])
+    if event.key in app.arrowKeys:
+        drow, dcol = convertDirections(app, event.key)
+        playerRow = app.player.row + drow
+        playerCol = app.player.col + dcol
+        if isLegalMove(app, playerRow, playerCol):
+            app.player.row = playerRow
+            app.player.col = playerCol
+            app.player.dir = (drow, dcol)
+    elif event.key == "Space":
+        app.player.attack()
+
+def createPlayerSprites(app):
+    spriteRight = app.loadImage(r"Graphics/walkingRight.png")
+    spriteLeft = app.loadImage(r"Graphics/walkingLeft.png")
+    app.playerSprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
+    for i in range(9):
+        sprite = spriteRight.crop((i*(45+18), 0, i*(45+18)+45, 63))
+        app.playerSprites['Right'].append(sprite)
+        sprite = spriteLeft.crop((i*(45+18), 0, i*(45+18)+45, 62))
+        app.playerSprites['Left'].append(sprite)
+    app.playerSpriteCounter = 0
+
 def drawPlayer(app, canvas):
+    # draw player sprite
+    sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
+    x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
+    cx, cy = (x0+x1)//2, (y0+y1)//2
+    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # draw basic player
     drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
 def drawEnemies(app, canvas):
@@ -160,19 +192,7 @@ def mazeMode_timerFired(app):
         app.startTime = time.time()
     
 def mazeMode_keyPressed(app, event):
-    arrowKeys = ["Up", "Right", "Down", "Left"]
-    if event.key in arrowKeys:
-        drow = app.directions[arrowKeys.index(event.key)][0]
-        dcol = app.directions[arrowKeys.index(event.key)][1]
-        playerRow = app.player.row + drow
-        playerCol = app.player.col + dcol
-        if isLegalMove(app, playerRow, playerCol, app.player.row, app.player.col):
-            app.player.row = playerRow
-            app.player.col = playerCol
-            app.player.dir = (drow, dcol)
-    elif event.key == "Space":
-        app.player.attack()
-
+    playerControls(app, event)
 
 # draw graph works
 def drawGraph(app, canvas, graph):
@@ -250,18 +270,7 @@ def roomMode_timerFired(app):
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
-    arrowKeys = ["Up", "Right", "Down", "Left"]
-    if event.key in arrowKeys:
-        drow = app.directions[arrowKeys.index(event.key)][0]
-        dcol = app.directions[arrowKeys.index(event.key)][1]
-        playerRow = app.player.row + drow
-        playerCol = app.player.col + dcol
-        if isLegalMove(app, playerRow, playerCol):
-            app.player.row = playerRow
-            app.player.col = playerCol
-            app.player.dir = (drow, dcol)
-    elif event.key == "Space":
-        app.player.attack()
+    playerControls(app, event)
 
 #####################################################
 # Drawing Functions
@@ -283,11 +292,12 @@ def drawBoard(app, canvas):
 
 def drawRoomWalls(app, canvas):
     for wall in app.wallsCoords:
-        x0, y0, x1, y1 = getCellBounds(app, wall)
-        cx, cy = (x0+x1)//2, (y0+y1)//2
-        wallSprite = app.wallSprite.resize( (int(x1-x0), int(y1-y0)) )
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(wallSprite))
-        # drawCell(app, canvas, wall.row, wall.col, wall.color)
+        ## draw walls using sprite
+        # x0, y0, x1, y1 = getCellBounds(app, wall)
+        # cx, cy = (x0+x1)//2, (y0+y1)//2
+        # wallSprite = app.wallSprite.resize( (int(x1-x0), int(y1-y0)) )
+        # canvas.create_image(cx, cy, image=ImageTk.PhotoImage(wallSprite))
+        drawCell(app, canvas, wall.row, wall.col, wall.color)
 
 def drawBullets(app, canvas):
     for bullet in app.player.bullets:

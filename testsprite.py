@@ -20,7 +20,7 @@ def appStarted(app):
     app.dir = "right"
 
 def timerFired(app):
-    app.spriteCounter = (1 + app.spriteCounter) % len(app.sprites)
+    app.spriteCounter = (1 + app.spriteCounter) % len(app.sprites[app.dir])
 
 def keyPressed(app, event):
     if event.key == "Left":
@@ -33,5 +33,5 @@ def redrawAll(app, canvas):
     canvas.create_image(200, 200, image=ImageTk.PhotoImage(sprite))
     print(app.spriteCounter)
 
-# runApp(width=400, height=400)
+runApp(width=400, height=400)
 
