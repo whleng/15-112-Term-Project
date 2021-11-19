@@ -18,12 +18,10 @@ def createRoomGraph(app):
     for row in range(app.rows):
         for col in range(app.cols):
             cell = row, col
-            visited.add(cell)
             if cell not in app.wallsCoords: # if the cell is not a wall
-                _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, visited)
+                _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
                 for neighbour in neighbours: 
                     if neighbour not in app.wallsCoords: # if neighbour is not a wall
-                        visited.add(neighbour)
                         print("neighbour: ", neighbour)
                         graph.addEdge(cell, neighbour) 
     return graph

@@ -8,7 +8,7 @@ class Player(object):
         self.xp = 10
         self.items = dict()
         self.bullets = []
-        self.dir = "Right"
+        self.dir = (0,1)
 
     def jump(self):
         # skip one box when moving in a particular direction

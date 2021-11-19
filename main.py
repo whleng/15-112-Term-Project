@@ -27,7 +27,12 @@ def appStarted(app):
 
     # mazeMode    
     if app.mode == "mazeMode":
-        app.enemy = Enemy(5,5)
+        while True:
+            x, y = random.randint(0, app.rows-1), random.rand(0, app.cols-1)
+            if (x,y) not in app.wallsCoords:
+                app.enemy = Enemy(x,y)
+                break
+        # app.enemy = Enemy(5,5)
         app.graph = prim(app)
         app.path = dfs(app.graph, 
                     (app.enemy.row, app.enemy.col),
@@ -48,6 +53,7 @@ def appStarted(app):
         app.path = dfs(app.graph, (app.enemy.row, app.enemy.col),
                         (app.player.row, app.player.col) )
         print(app.path)
+        app.enemySteps = 0
 
 
 #########################################################
@@ -119,13 +125,13 @@ def getCellBounds(app, node):
     return (x0, y0, x1, y1)
 
 def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=None):
-    if app.mode == "roomMode":
-        return (0 <= playerRow < app.rows and
-                0 <= playerCol < app.cols and
-                (playerRow, playerCol) not in app.wallsCoords)
-    elif app.mode == "mazeMode":
-        return (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol))
-    return False
+    # if app.mode == "roomMode":
+    #     return (0 <= playerRow < app.rows and
+    #             0 <= playerCol < app.cols and
+    #             (playerRow, playerCol) not in app.wallsCoords)
+    # elif app.mode == "mazeMode":
+    return (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol))
+    # return False
 
 def convertDirections(app, dir):
     print(dir)
@@ -140,7 +146,7 @@ def playerControls(app, event):
         drow, dcol = convertDirections(app, event.key)
         playerRow = app.player.row + drow
         playerCol = app.player.col + dcol
-        if isLegalMove(app, playerRow, playerCol):
+        if isLegalMove(app, playerRow, playerCol, app.player.row, app.player.col):
             app.player.row = playerRow
             app.player.col = playerCol
             app.player.dir = (drow, dcol)
@@ -165,13 +171,13 @@ def createPlayerSprites(app):
 
 def drawPlayer(app, canvas):
     # draw player sprite
-    # sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
-    # x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
-    # cx, cy = (x0+x1)//2, (y0+y1)//2
-    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    # canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
+    x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
+    cx, cy = (x0+x1)//2, (y0+y1)//2
+    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     # draw basic player
-    drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
+    # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
 def drawEnemies(app, canvas):
     # temporarily having only 1 enemy
@@ -194,7 +200,6 @@ def drawCell(app, canvas, row, col, cellColor):
 def mazeMode_timerFired(app):
     currTime = time.time()
     player = app.player.row, app.player.col
-    print(player)
     enemy = app.enemy.row, app.enemy.col
     if currTime - app.startTime > 1:
         app.path = dfs(app.graph, enemy, player)
@@ -266,23 +271,27 @@ def mazeMode_redrawAll(app, canvas):
 def roomMode_timerFired(app):
     currTime = time.time()
     player = app.player.row, app.player.col
-    print(player)
     enemy = app.enemy.row, app.enemy.col
-    if currTime - app.startTime > 1:
+    if app.enemySteps > 10:
         app.path = dfs(app.graph, enemy, player)
         app.path.pop()
+        app.enemySteps = 0
+    if currTime - app.startTime > 0.3:
         print("path: ", app.path)
         if app.path != []:
+            app.enemySteps += 1
             app.enemy.row, app.enemy.col = app.path.pop()
             print("moved", app.enemy.row, app.enemy.col)
         # for enemy in app.roomEnemies:
         #    enemy.followPlayer(app.player.row, app.player.col)
         app.startTime = time.time()
     for bullet in app.player.bullets:
+        print("bullet:", bullet)
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
-        app.roomEnemies = bullet.checkCollision(app.roomEnemies)
+        # can't check collision because currently using single enemy instead of enemy list
+        # app.roomEnemies = bullet.checkCollision(app.roomEnemies)
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
@@ -327,6 +336,6 @@ def roomMode_redrawAll(app, canvas):
     drawRoomWalls(app, canvas)
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
-    # drawBullets(app, canvas)
+    drawBullets(app, canvas)
 
 runApp(width=800, height=600)
