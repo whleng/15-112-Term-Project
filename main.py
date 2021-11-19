@@ -3,7 +3,6 @@ from graph import *
 from mazeMap import *
 from room import *
 from objects import *
-import random
 import time
 
 #########################################################
@@ -16,7 +15,8 @@ def appStarted(app):
     app.startTime = time.time()
     # "Up", "Right", "Down", "Left"
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    
+    app.rows, app.cols, app.cellSize, app.margin = gameDimensions()
+
     # mazeMode
     if app.mode == "mazeMode":
         app.enemy = Enemy(5,5)
@@ -27,7 +27,6 @@ def appStarted(app):
 
     # roomMode
     elif app.mode == "roomMode":
-        app.rows, app.cols, app.cellSize, app.margin = gameDimensions()
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
         app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
         app.roomItems = []

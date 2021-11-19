@@ -61,6 +61,12 @@ class Wall(object):
         self.row, self.col = row, col
         self.color = "brown"
 
+    def __hash__(self):
+        return hash( (self.row, self.col) )
+
+    def __repr__(self):
+        return str( (self. row, self.col) )
+
 class Item(object):
     def __init__(self, name):
         self.name = name
