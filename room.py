@@ -1,5 +1,14 @@
 import random
 from objects import *
+from cmu_112_graphics import *
+
+
+def appStarted(app):
+    # "Up", "Right", "Down", "Left"
+    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    app.rows, app.cols, app.cellSize, app.margin = 20, 20, 20, 0 
+    app.board = [ ["white"] *  app.cols for i in range(app.rows)]
+    app.walls, app.wallsCoords = createWalls(app) 
 
 def createWalls(app):
     ## complete random generation of 1 wall block
@@ -12,45 +21,69 @@ def createWalls(app):
     # return walls, wallsCoords
 
     ## group generation of wall
-    wallCount = 10
-    walls = set()
+    wallCount = 15
     wallsCoords = set()
-    while len(walls) < wallCount:
+    walls = set()
+    while len(wallsCoords) < wallCount:
         wallRow, wallCol = random.randint(0,19), random.randint(0, 19)
-        wallSet, wallSetCoords = placeWall(wallRow, wallCol, app.board)
-        if wallSet != None and wallSetCoords != None:
-            walls.union(wallSet)
-            wallsCoords.union(wallSetCoords)
+        result = placeWall(app, wallRow, wallCol, app.board)
+        if result != None:
+            wallSet, wallSetCoords = result
+            walls = walls.union(wallSet)
+            wallsCoords = wallsCoords.union(wallSetCoords)
+            print("here", walls)
     return walls, wallsCoords
 
-def placeWall(row, col, board):
+# chooses a random row, col to place a wall
+def placeWall(app, row, col, board):
         wallSetSize = 4
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        wallSet, wallSetCoords = [], []
-        if checkCellEmpty(row, col, board):
-                for dir in directions:
-                    wallList = checkEmptyFromDirection(row, col, board, dir, wallSetSize)
-                    if wallList != None:
-                        for (wallRow, wallCol) in wallList:
-                            wallSetCoords.append( (wallRow, wallCol) )
-                            wall = Wall(wallRow, wallCol)
-                            wallSet.append(wall)
-                        return (wallSet, wallSetCoords)
+        wallSet, wallSetCoords = set(), set()
+        if checkCellEmpty(app, row, col, board):
+            for _ in range(len(directions)):
+                dir = random.choice(directions)
+                wallList = checkEmptyFromDirection(app, row, col, board, dir, wallSetSize)
+                print(wallList)
+                if wallList != None:
+                    for (wallRow, wallCol) in wallList:
+                        wallSetCoords.add( (wallRow, wallCol) )
+                        wall = Wall(wallRow, wallCol)
+                        wallSet.add(wall)
+                    print("place", wallSet, wallSetCoords)
+                    return (wallSet, wallSetCoords)
         return None
-        # if there is nothing in four areas around it, then place wall in a random direction
-        # place wall in a set of 4 
         
-def checkCellEmpty(row, col, board):
-    return board[row][col] == "white"
-
-def checkEmptyFromDirection(row, col, board, dir, wallSetSize):
+# determines if there is sufficient space for a set of wall
+def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize):
     drow, dcol = dir
-    wallList = [(row, col)]
+    wallList = set()
+    wallList.add( (row, col) )
     for i in range(wallSetSize):
         newRow = row + drow * i
         newCol = col + dcol * i
-        if not checkCellEmpty(newRow, newCol, board): 
+        print(newRow, newCol)
+        if not checkCellEmpty(app, newRow, newCol, board): 
             return None
-        wallList.append( (newRow, newCol) )
+        wallList.add( (newRow, newCol) )
     return wallList
 
+def checkCellEmpty(app, row, col, board):
+    return (0 < row <= app.rows and 
+            0 < col <= app.cols and
+            board[row][col] == "white")
+
+# draws one cell according to its row and col position
+def drawCell(app, canvas, row, col, cellColor):
+    x = app.margin + col * app.cellSize
+    y = app.margin + row * app.cellSize
+    canvas.create_oval(x, y, x + app.cellSize, y + app.cellSize,
+                            fill=cellColor)
+def drawWalls(app, canvas):
+    for wall in app.walls:
+        drawCell(app, canvas, wall.row, wall.col, wall.color)
+
+def redrawAll(app, canvas):
+    drawWalls(app, canvas)
+    drawCell(app, canvas, 4, 4, "blue")
+
+runApp(width=400, height=400)
