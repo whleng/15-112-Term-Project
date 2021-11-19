@@ -135,61 +135,10 @@ def getNeighbours(app, rows, cols, row, col, visited):
                 visitedNeighbours.add( (newRow, newCol))
     return visitedNeighbours, unvisitedNeighbours
 
-# draw graph works
-def drawGraph(app, canvas, graph):
-    # graph is an instance of the Graph class
-    unvisitedCells = set()
-    startNode = (0,0)
-    unvisitedCells.add(startNode)
-    visitedCells = set()
-    while len(unvisitedCells) > 0:
-        node = unvisitedCells.pop()
-        visitedCells.add(node)
-        _, neighbours = getNeighbours(app, app.rows, app.cols, 
-                            node[0], node[1], visitedCells)
-        #print(neighbours)
-        for neighbour in neighbours:
-            #print(neighbour)
-            # if neighbour does not have a connected edge to the node
-            if (node not in graph.table or 
-                neighbour not in graph.getNeighbours(node)):
-                drawWall(app, canvas, node, neighbour)
-        unvisitedCells = set.union(neighbours, unvisitedCells)
-
-# returns two coordinates to draw the walls
-def drawWall(app, canvas, node, neighbour):
-    # node and neighbour are going to be in the format of (row, col)
-    nodeRow, nodeCol = node
-    neighbourRow, neighbourCol = neighbour
-    if nodeRow == neighbourRow:
-        if nodeCol > neighbourCol: # node is on the right of the neighbour
-            x0, y0, x1, y1 = getCellBounds(app, node)
-        else:  
-            x0, y0, x1, y1 = getCellBounds(app, neighbour) # neighbour on right
-        line = x0, y0, x0, y0 + app.cellSize
-    elif nodeCol == neighbourCol:
-        if nodeRow > neighbourRow: # node is on bottom of neighbour
-            x0, y0, x1, y1 = getCellBounds(app, node)
-        else:  # neighbour at bottom
-            x0, y0, x1, y1 = getCellBounds(app, neighbour)
-        line = x0, y0, x0 + app.cellSize, y0
-    canvas.create_line(line)
-
-# returns (x0, y0, x1, y1) corners/bounding box of given cell in grid
-# cited from 
-# http://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
-def getCellBounds(app, node):
-    row, col = node
-    gridWidth  = app.width - 2*app.margin
-    gridHeight = app.height - 2*app.margin
-    cellWidth = gridWidth / app.cols
-    cellHeight = gridHeight / app.rows
-    x0 = app.margin + col * cellWidth
-    x1 = app.margin + (col+1) * cellWidth
-    y0 = app.margin + row * cellHeight
-    y1 = app.margin + (row+1) * cellHeight
-    return (x0, y0, x1, y1)
     
+#################################################
+# Test Code
+#################################################
 # def appStarted(app):
 #     app.margin = 0
 #     app.rows, app.cols = 20, 20

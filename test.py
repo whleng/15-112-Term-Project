@@ -1,5 +1,0 @@
-s = set()
-t = set()
-s.add(4)
-t.add(5)
-print(s.union(t))

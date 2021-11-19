@@ -33,5 +33,5 @@ def redrawAll(app, canvas):
     canvas.create_image(200, 200, image=ImageTk.PhotoImage(sprite))
     print(app.spriteCounter)
 
-runApp(width=400, height=400)
+# runApp(width=400, height=400)
 
