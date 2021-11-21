@@ -10,7 +10,7 @@ import time
 #########################################################
 
 def appStarted(app):
-    app.mode = "roomMode" # modes: mazeMode, roomMode, splashscreenMode
+    app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
     
     if app.mode == "splashscreenMode":
@@ -337,5 +337,10 @@ def roomMode_redrawAll(app, canvas):
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
     drawBullets(app, canvas)
+
+
+#########################################################
+# BOSS MODE
+#########################################################
 
 runApp(width=800, height=600)
