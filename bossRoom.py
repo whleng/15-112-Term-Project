@@ -35,7 +35,7 @@ class attackState(State):
 class defendState(State):
     def on_event(self, app, event):    
         print("defend")        
-        if event == "player stops attack":
+        if event == "player moves":
             return attackState()
         # move away from player
         defend(app)

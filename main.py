@@ -404,14 +404,17 @@ def bossMode_keyPressed(app, event):
             app.player.row = playerRow
             app.player.col = playerCol
             app.player.dir = (drow, dcol)
+            return
     elif event.key == "Space":
         app.player.attack()
         app.gameEvent = "player attacks"
-    else:         
-        app.gameEvent = "player stops attack"
+        return
 
 def bossMode_timerFired(app):
-    app.boss.on_event(app, app.gameEvent)
+    currTime = time.time()
+    if currTime - app.startTime > 0.5:
+        app.boss.on_event(app, app.gameEvent)
+        app.startTime = time.time()
     for bullet in app.player.bullets:
         drow, dcol = bullet.dir
         bullet.row += drow
@@ -422,6 +425,7 @@ def bossMode_timerFired(app):
         bullet.col += dcol
 
 def bossMode_redrawAll(app, canvas):
+    print(app.gameEvent)
     print(app.boss.x, app.boss.y)
     drawBoard(app, canvas)
     drawPlayer(app, canvas)
