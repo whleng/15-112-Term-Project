@@ -3,7 +3,6 @@ from graph import *
 from objects import *
 from cmu_112_graphics import *
 
-
 def appStarted(app):
     # "Up", "Right", "Down", "Left"
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
@@ -76,13 +75,14 @@ def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords)
     drow, dcol = dir 
     wallList = set()
     wallList.add( (row, col) )
-    for i in range(wallSetSize):
+    # currently ensures that at both ends of the walls there's enough space, but not in all 4 dir
+    for i in range(-1, wallSetSize+2):
         newRow = row + drow * i
         newCol = col + dcol * i
         print(newRow, newCol)
         if not checkCellEmpty(app, newRow, newCol, board, wallsCoords): 
             return None
-        wallList.add( (newRow, newCol) )
+        if i < wallSetSize: wallList.add( (newRow, newCol) )
     return wallList
 
 # need to improve this

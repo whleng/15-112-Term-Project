@@ -265,7 +265,8 @@ def bfs(board):
                 if neighbour == goal: return True
         return None
 
-
+q.get()
+q.put()
 # bfs
 # for each starting node, find its neighbours, add it to a queue
 # if the node has not been visited, visit it and find its neighbours

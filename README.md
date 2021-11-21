@@ -3,13 +3,15 @@
 This is my 15-112 Term Project
 
 Graphics
+* Barrel, Big_worm, Chests, Man_eater_flower:
+- https://lpc.opengameart.org/static/lpc-style-guide/assets.html#objects
 * Dungeon floor:
 https://images.creativemarket.com/0.1.0/ps/120087/910/607/m1/fpnw/wm0/stonefloor001_large-.jpg?1401477523&s=aeb8c8fbad2e06ac22344908c9ad2c9e
 * Dungeon:
 - https://stock.adobe.com/search?k=dungeon+background
 * Wall sprite:
 - https://cdnb.artstation.com/p/assets/images/images/011/210/507/large/kim-shein-wall-sprite.jpg?1528384411
-* Sprite sheet (player.png):
+* Player:
 - body/male/human/white.png: by Stephen Challener (Redshrike), Johannes Sjölund (wulax). License(s): CC-BY-SA 3.0, GPL 3.0. 
     - https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
     - https://opengameart.org/content/lpc-medieval-fantasy-character-sprites

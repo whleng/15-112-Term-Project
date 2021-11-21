@@ -71,6 +71,7 @@ def isInRange(app, bullet, boss):
         and bullet.col - bufferSpace < boss.x < bullet.col + bufferSpace)
 
 def attack(app):
+    
     bullet = Bullet(app.boss.y, app.boss.x, app.player.dir)
     app.boss.bullets.append( bullet )
 
