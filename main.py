@@ -7,17 +7,22 @@ from bossRoom import *
 import time
 
 #########################################################
+# Variables
+
+WIDTH = 1300
+HEIGHT = 750
+
+#########################################################
 # MAIN APP
 #########################################################
 
 def appStarted(app):
-    app.mode = "bossMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
+    app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
     
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
-
   
     app.startTime = time.time()
     app.arrowKeys = ["Up", "Right", "Down", "Left"]
@@ -411,10 +416,7 @@ def bossMode_keyPressed(app, event):
         return
 
 def bossMode_timerFired(app):
-    currTime = time.time()
-    if currTime - app.startTime > 0.5:
-        app.boss.on_event(app, app.gameEvent)
-        app.startTime = time.time()
+    app.boss.on_event(app, app.gameEvent)
     for bullet in app.player.bullets:
         drow, dcol = bullet.dir
         bullet.row += drow
@@ -432,4 +434,4 @@ def bossMode_redrawAll(app, canvas):
     drawBoss(app, canvas)
     drawBossRoomBullets(app, canvas)
 
-runApp(width=800, height=600)
+runApp(width=WIDTH, height=HEIGHT)

@@ -18,14 +18,14 @@ class State(object):
 
 class idleState(State):
     def on_event(self, app, event):
-        print("idle")
+        # print("idle")
         if event == "player moves":
             return attackState()
         return self
 
 class attackState(State):
     def on_event(self, app, event):
-        print("attack")
+        # print("attack")
         if event == "low health" or event == "player attacks":
             return defendState()
         # shoot at player
@@ -34,7 +34,7 @@ class attackState(State):
             
 class defendState(State):
     def on_event(self, app, event):    
-        print("defend")        
+        # print("defend")        
         if event == "player moves":
             return attackState()
         # move away from player
@@ -57,12 +57,16 @@ class Boss(object):
         self.state = self.state.on_event(app, event)
 
 def defend(app):
-    # step = 10
+    step = 5
     app.boss.shield = True
     for bullet in app.player.bullets:
         if isInRange(app, bullet, app.boss):
-            app.boss.x += 1 # step
-            app.boss.y += 1 # step
+            print(bullet.dir)
+            stepDir = random.choice([1,-1])
+            if bullet.dir[0] != 0: # (1,0) or (-1,0) horizontal movement
+                app.boss.x += step * stepDir
+            elif bullet.dir[1] != 0: # (0,1) or (0,-1) vertical movement
+                app.boss.y += step * stepDir 
             return
     
 def isInRange(app, bullet, boss):
@@ -71,14 +75,18 @@ def isInRange(app, bullet, boss):
         and bullet.col - bufferSpace < boss.x < bullet.col + bufferSpace)
 
 import math
+import time
 
 def attack(app):
-    rowDiff = (app.player.row - app.boss.y)
-    colDiff = (app.player.col - app.boss.x)
-    magnitude = math.sqrt(rowDiff**2 + colDiff**2)
-    dir = [ (1/magnitude) * rowDiff, (1/magnitude) * colDiff ]
-    bullet = Bullet(app.boss.y, app.boss.x, dir)
-    app.boss.bullets.append( bullet )
+    currTime = time.time()
+    if currTime - app.startTime > 1:
+        rowDiff = (app.player.row - app.boss.y)
+        colDiff = (app.player.col - app.boss.x)
+        magnitude = math.sqrt(rowDiff**2 + colDiff**2)
+        dir = [ (1/magnitude) * rowDiff, (1/magnitude) * colDiff ]
+        bullet = Bullet(app.boss.y, app.boss.x, dir)
+        app.boss.bullets.append( bullet )
+        app.startTime = time.time()
 
 def bossRoomInit(app):
     app.boss = Boss(10, 10)
@@ -95,7 +103,7 @@ def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=Non
             0 <= playerCol < app.cols)
 
 def convertDirections(app, dir):
-    print(dir)
+    # print(dir)
     if dir in app.directions: # in drow, dcol form
         return app.arrowKeys[app.directions.index(dir)]
     elif dir in app.arrowKeys: # in arrow key form
