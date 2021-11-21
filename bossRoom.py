@@ -70,25 +70,25 @@ def isInRange(app, bullet, boss):
     return (bullet.row - bufferSpace < boss.y < bullet.row + bufferSpace
         and bullet.col - bufferSpace < boss.x < bullet.col + bufferSpace)
 
+import math
+
 def attack(app):
-    
-    bullet = Bullet(app.boss.y, app.boss.x, app.player.dir)
+    rowDiff = (app.player.row - app.boss.y)
+    colDiff = (app.player.col - app.boss.x)
+    magnitude = math.sqrt(rowDiff**2 + colDiff**2)
+    dir = [ (1/magnitude) * rowDiff, (1/magnitude) * colDiff ]
+    bullet = Bullet(app.boss.y, app.boss.x, dir)
     app.boss.bullets.append( bullet )
 
-def runGame():
-    boss = Boss(10, 10)
-    boss.on_event("player moves")
-    boss.on_event("player attacks")
-
-# runGame()
-
-def appStarted(app):
+def bossRoomInit(app):
     app.boss = Boss(10, 10)
     app.player = Player()
     app.gameEvent = None
     app.cols, app.rows, app.margin, app.cellSize = 20, 20, 0, 20
     app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-    
+
+# def appStarted(app):
+#     bossRoomInit(app)
 
 def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=None):
     return (0 <= playerRow < app.rows and
@@ -101,43 +101,6 @@ def convertDirections(app, dir):
     elif dir in app.arrowKeys: # in arrow key form
         return app.directions[app.arrowKeys.index(dir)]
 
-def keyPressed(app, event):
-    # if event.key == "Space":
-    #     app.gameEvent = "player attacks"
-    # elif event.key == "Up":
-    #     app.gameEvent = "player moves"
-    # else:
-    #     app.gameEvent = "player stops attack"
-        
-    app.arrowKeys = ["Up", "Right", "Down", "Left"]
-    # "Up", "Right", "Down", "Left"
-    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    if event.key in app.arrowKeys:
-        app.gameEvent = "player moves"
-        drow, dcol = convertDirections(app, event.key)
-        playerRow = app.player.row + drow
-        playerCol = app.player.col + dcol
-        if isLegalMove(app, playerRow, playerCol, app.player.row, app.player.col):
-            app.player.row = playerRow
-            app.player.col = playerCol
-            app.player.dir = (drow, dcol)
-    elif event.key == "Space":
-        app.player.attack()
-        app.gameEvent = "player attacks"
-    else:         
-        app.gameEvent = "player stops attack"
-
-def timerFired(app):
-    app.boss.on_event(app, app.gameEvent)
-    for bullet in app.player.bullets:
-        drow, dcol = bullet.dir
-        bullet.row += drow
-        bullet.col += dcol
-    for bullet in app.boss.bullets:
-        drow, dcol = bullet.dir
-        bullet.row += drow
-        bullet.col += dcol
-
 # draws one cell according to its row and col position
 def drawCell(app, canvas, row, col, cellColor):
     x = app.margin + col * app.cellSize
@@ -145,33 +108,12 @@ def drawCell(app, canvas, row, col, cellColor):
     canvas.create_oval(x, y, x + app.cellSize, y + app.cellSize,
                             fill=cellColor)
 
-# draws every individual cell in the board
-def drawBoard(app, canvas):
-    for row in range(app.rows):
-        for col in range(app.cols):
-                cellColor = app.board[row][col]
-                drawCell(app, canvas, row, col, cellColor) 
-
-def drawRoomWalls(app, canvas):
-    for wall in app.walls:
-        ## draw walls using sprite, need to loop through wall in wall coords
-        # x0, y0, x1, y1 = getCellBounds(app, wall)
-        # cx, cy = (x0+x1)//2, (y0+y1)//2
-        # wallSprite = app.wallSprite.resize( (int(x1-x0), int(y1-y0)) )
-        # canvas.create_image(cx, cy, image=ImageTk.PhotoImage(wallSprite))
-
-        # draw wall as a circle, loop through wall in walls
-        drawCell(app, canvas, wall.row, wall.col, wall.color)
-
-def drawBullets(app, canvas):
+def drawBossRoomBullets(app, canvas):
     for bullet in app.player.bullets:
         drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
     for bullet in app.boss.bullets:
         drawCell(app, canvas, bullet.row, bullet.col, "yellow")
-
-def drawPlayer(app, canvas):
-    drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
 def drawBoss(app, canvas):
     drawCell(app, canvas, app.boss.y, app.boss.x, "green")
@@ -180,9 +122,9 @@ def redrawAll(app, canvas):
     drawBoard(app, canvas)
     drawPlayer(app, canvas)
     drawBoss(app, canvas)
-    drawBullets(app, canvas)
+    drawBossRoomBullets(app, canvas)
 
-runApp(width=400, height=400)
+# runApp(width=400, height=400)
 
 ###############################################################
 

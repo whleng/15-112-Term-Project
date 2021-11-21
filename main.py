@@ -11,7 +11,7 @@ import time
 #########################################################
 
 def appStarted(app):
-    app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
+    app.mode = "bossMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
     
     if app.mode == "splashscreenMode":
@@ -30,7 +30,7 @@ def appStarted(app):
     app.cellHeight = app.gridHeight / app.rows
 
     app.player = Player()
-    createPlayerSprites(app)
+#    createPlayerSprites(app)
 
     # mazeMode    
     if app.mode == "mazeMode":
@@ -57,13 +57,13 @@ def appStarted(app):
         print("start graph")
         app.graph = createRoomGraph(app)
         print(app.graph.table)
-        app.path = dfs(app.graph, (app.enemy.row, app.enemy.col),
+        app.path = bfs(app.graph, (app.enemy.row, app.enemy.col),
                         (app.player.row, app.player.col) )
         print(app.path)
         app.enemySteps = 0
 
     elif app.mode == "bossMode":
-        pass
+        bossRoomInit(app)
 
 #########################################################
 # SPLASHSCREEN MODE
@@ -135,7 +135,11 @@ def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=Non
     #             0 <= playerCol < app.cols and
     #             (playerRow, playerCol) not in app.wallsCoords)
     # elif app.mode == "mazeMode":
-    return (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol))
+    if app.mode == "bossMode":
+        return (0 <= playerRow < app.rows and
+            0 <= playerCol < app.cols)
+    else:
+        return (playerRow, playerCol) in app.graph.getNeighbours((prevPlayerRow, prevPlayerCol))
     # return False
 
 def convertDirections(app, dir):
@@ -174,7 +178,7 @@ def createPlayerSprites(app):
     #     app.playerSprites['Left'].append(sprite)
     
     # referenced from Tze Hng Loke (tloke)
-    app.playerSpriteSheet = app.loadImage('Graphics/player.png')
+    app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
     imageWidth, imageHeight = app.playerSpriteSheet.size
     app.playerHeightFactor = imageHeight / app.cellHeight 
     rows = 21
@@ -206,13 +210,13 @@ def isLegalEnemy(app, row, col):
 
 def drawPlayer(app, canvas):
     # draw player sprite
-    sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
-    x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
-    cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
-    # draw basic player
-    # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
+    # sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
+    # x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
+    # cx, cy = (x0+x1)//2, (y0+y1)//2
+    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    # canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # # draw basic player
+    drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
 def drawEnemies(app, canvas):
     # temporarily having only 1 enemy
@@ -377,5 +381,51 @@ def roomMode_redrawAll(app, canvas):
 #########################################################
 # BOSS MODE
 #########################################################
+
+
+
+def bossMode_keyPressed(app, event):
+    # if event.key == "Space":
+    #     app.gameEvent = "player attacks"
+    # elif event.key == "Up":
+    #     app.gameEvent = "player moves"
+    # else:
+    #     app.gameEvent = "player stops attack"
+        
+    app.arrowKeys = ["Up", "Right", "Down", "Left"]
+    # "Up", "Right", "Down", "Left"
+    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    if event.key in app.arrowKeys:
+        app.gameEvent = "player moves"
+        drow, dcol = convertDirections(app, event.key)
+        playerRow = app.player.row + drow
+        playerCol = app.player.col + dcol
+        if isLegalMove(app, playerRow, playerCol, app.player.row, app.player.col):
+            app.player.row = playerRow
+            app.player.col = playerCol
+            app.player.dir = (drow, dcol)
+    elif event.key == "Space":
+        app.player.attack()
+        app.gameEvent = "player attacks"
+    else:         
+        app.gameEvent = "player stops attack"
+
+def bossMode_timerFired(app):
+    app.boss.on_event(app, app.gameEvent)
+    for bullet in app.player.bullets:
+        drow, dcol = bullet.dir
+        bullet.row += drow
+        bullet.col += dcol
+    for bullet in app.boss.bullets:
+        drow, dcol = bullet.dir
+        bullet.row += drow
+        bullet.col += dcol
+
+def bossMode_redrawAll(app, canvas):
+    print(app.boss.x, app.boss.y)
+    drawBoard(app, canvas)
+    drawPlayer(app, canvas)
+    drawBoss(app, canvas)
+    drawBossRoomBullets(app, canvas)
 
 runApp(width=800, height=600)
