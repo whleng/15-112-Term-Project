@@ -36,26 +36,11 @@ class Node(object):
 # referenced from TA lecture: Graph Algorithm
 def dfs(graph, startNode, targetNode):
     visited = set()
-    '''
-    ### testing graph ### 
-    graph = Graph()
-    graph.addEdge((0,0), (0,1))
-    graph.addEdge((0,1), (1,1))
-    graph.addEdge((1,1), (1,2))
-    graph.addEdge((1,1), (2,1))
-    graph.addEdge((2,1), (2,2))
-    graph.addEdge((2,1), (2,0))
-    print("start graph: ", graph)
-    '''
-    # solution = set()
     solution = dict()
-    # startNode = (0,0)
-    # targetNode = (5,5)
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
     print("sol:", solution)
     return solution # a list of coordinates
-    print("solution: ", solution)
 
 def constructPath(solution, startNode, targetNode): 
     currNode = targetNode
@@ -66,7 +51,6 @@ def constructPath(solution, startNode, targetNode):
         currNode = prevNode
         if currNode == startNode: break
     return path
-    return list(reversed(path))
 
 def solve(startNode, targetNode, graph, visited, solution):
     if startNode == targetNode:
@@ -84,6 +68,30 @@ def solve(startNode, targetNode, graph, visited, solution):
     return None
 
 # dfs() # uncomment to test dfs
+
+from queue import *
+
+# referenced from TA lecture on graph algorithms
+def bfs(graph, startNode, targetNode):
+    visited = set()
+    solution = dict()
+    q = Queue() # to be visited
+    q.put(startNode) 
+    currNode = startNode
+    while currNode != targetNode:
+        # print(currNode)
+        currNode = q.get()
+        visited.add(currNode)
+        for neighbour in graph.getNeighbours(currNode):
+            if neighbour not in visited:
+                solution[neighbour] = currNode
+                q.put(neighbour)
+                visited.add(neighbour)
+    solution = constructPath(solution, startNode, targetNode)
+    # print(solution)
+    return solution
+
+# bfs() # uncomment to test dfs
 
 import random 
 
@@ -136,7 +144,7 @@ def getNeighbours(app, rows, cols, row, col, visited):
                 visitedNeighbours.add( (newRow, newCol))
     return visitedNeighbours, unvisitedNeighbours
 
-    
+
 #################################################
 # Test Code
 #################################################
@@ -146,7 +154,7 @@ def getNeighbours(app, rows, cols, row, col, visited):
 #     app.cellHeight, app.cellWidth = app.height / app.rows, app.width / app.cols
 #     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 #     app.graph = prim(app)
-#     app.path = dfs(app.graph)
+#     app.path = bfsNew(app.graph)
 #     # app.graph = Graph()
 #     # app.graph.addEdge((0,0), (0,1))
 #     # app.graph.addEdge((0,1), (1,1))
@@ -164,19 +172,6 @@ def getNeighbours(app, rows, cols, row, col, visited):
 #         drawCell(app, canvas, row, col, "red")
 
 # runApp(width=400, height=400)
-# loop through nodes in the graph 
-#   check the neighbours of this node
-#   if the node and the neighbour are not connected by an edge, draw a wall between them
-# loop through neighbours of the graph and repeat the same thing
-
-# ---------------------------------------------------------------
-
-# nodes in graph are individual row, col cells
-# need to write a function which draws the borders of the cell, based on their connection 
-# if row == row, check which col greater then that is the direction, draw a wall there
-# apply same rule for col == col
-# walls can be represented (row,col),(row,col) aka wall connecting these two nodes together
-
 
 ####################################################
 # Code that doesn't work
@@ -184,7 +179,6 @@ def getNeighbours(app, rows, cols, row, col, visited):
 
 from queue import PriorityQueue
 
-# dijkstra does not really work
 def dijksrta():
     allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
     graph = Graph()
@@ -225,64 +219,3 @@ def dijksrta():
 
 # dijksrta()
 
-
-# bfs does not really work
-def bfs(board):
-    # conversion of board to graph
-    nodes = set()
-    edges = dict()
-    visited = [ [False] * cols for _ in range(rows) ]
-
-    # convert to nodes
-    for row in range(len(rows)):
-        for col in range(len(cols)):
-            nodes.add( (row, col) )
-
-    # convert connections to edges
-    for startNode in nodes:
-        for endNode in nodes:
-            if (startNode != endNode and board(startNode) == "white"
-                and board(endNode) == "white"):
-                if len(edges[startNode]) == 0: 
-                    edges[startNode] = set()
-                edges.startNode.add(endNode)
-    
-    import queue
-
-    goal = (row-1, col-1)
-    reached = False
-    currNode = (0,0)
-    nodeNeighbours = list()
-    while not reached:
-        visited[currNode] = True
-        neighbours = getNeighbours(currNode)
-        nodeNeighbours.extend(neighbours)
-
-        while len(nodeNeighbours) > 0:
-            for neighbour in nodeNeighbours:
-                neighbours = getNeighbours(neighbour)
-                nodeNeighbours.extend(neighbours)
-                if neighbour == goal: return True
-        return None
-
-q.get()
-q.put()
-# bfs
-# for each starting node, find its neighbours, add it to a queue
-# if the node has not been visited, visit it and find its neighbours
-# keep searching the node for its neighbors, if reach end node return
-# while checking, keep track of the shortest path to that point (using)
-# 1. Add root node to the queue, and mark it as visited(already explored).
-# 2. Loop on the queue as long as it's not empty.
-#    1. Get and remove the node at the top of the queue(current).
-#    2. For every non-visited child of the current node, do the following: 
-#        1. Mark it as visited.
-#        2. Check if it's the goal node, If so, then return it.
-#        3. Otherwise, push it to the queue.
-# 3. If queue is empty, then goal node was not found!
-
-# dfs
-# for each starting node, find its neighbours
-# for the neighbours, add to the list the next level nodes to search
-# go the the next level, then search the neighbours from there
-# if one of the neighbours is the end position, backtrack to find the solution

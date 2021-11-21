@@ -63,7 +63,7 @@ def appStarted(app):
         app.enemySteps = 0
 
     elif app.mode == "bossMode":
-        
+        pass
 
 #########################################################
 # SPLASHSCREEN MODE
