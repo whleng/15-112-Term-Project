@@ -3,6 +3,12 @@
 This is my 15-112 Term Project
 
 Graphics
+* Bullets
+- https://www.pngegg.com/en/png-cfgjc
+* Dungeon background (in roomMode):
+- https://cutewallpaper.org/21/dungeon-background/Best-56-Dungeon-Background-on-HipWallpaper-Dungeon-Boss-.jpg
+* Portal:
+- https://favpng.com/png_view/column-sprite-portal-video-game-film-png/Ed0S8uT5
 * Barrel, Big_worm, Chests, Man_eater_flower:
 - https://lpc.opengameart.org/static/lpc-style-guide/assets.html#objects
 * Dungeon floor:

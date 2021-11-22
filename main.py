@@ -23,7 +23,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "bossMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
+    app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
     if app.mode == "splashscreenMode":
@@ -235,6 +235,12 @@ def isLegalPlacement(app, row, col):
            0 <= col < app.cols and
            (row, col) not in app.wallsCoords)
 
+def drawHealthBar(app, canvas, character, x0, y0, x1, y1):
+    x2, y2, x3, y3 = x0 + app.cellWidth//10, y0 - app.cellWidth//10, x1 - app.cellWidth//10, y0 - app.cellWidth//10*3
+    canvas.create_rectangle(x2, y2, x3, y3)
+    x4, y4, x5, y5 = x2, y2, character.health/100*(x3-x2)+x2, y3
+    canvas.create_rectangle(x4, y4, x5, y5, fill="red")
+    
 def drawPlayer(app, canvas):
     # draw player sprite
     sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
@@ -243,6 +249,9 @@ def drawPlayer(app, canvas):
     
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # health bar
+    drawHealthBar(app, canvas, app.player, x0, y0, x1, y1)
+    
     # # draw basic player
     # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
@@ -261,7 +270,6 @@ def drawEnemies(app, canvas):
         sprite, cx, cy = getSpriteInFrame(app, enemy, 
                         app.enemySprites, app.enemySpriteCounter)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
-    
     # draw basic enemy
     # temporarily having only 1 enemy
     # enemy = app.enemy 
