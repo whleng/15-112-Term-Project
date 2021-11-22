@@ -37,7 +37,7 @@ def createWalls(app):
     # return walls, wallsCoords
 
     ## group generation of wall
-    wallCount = 15
+    wallCount = 30
     wallsCoords = set()
     walls = set()
     while len(wallsCoords) < wallCount:

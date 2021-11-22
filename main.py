@@ -65,6 +65,8 @@ def appStarted(app):
         app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
         app.enemySpriteCounter = 0
         app.portalSprite = app.loadImage(r"Graphics/portal.png")
+        app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
+        app.portalSpriteCounter = 0
 
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
 
@@ -189,7 +191,6 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
     # referenced from Tze Hng Loke (tloke)
     imageWidth, imageHeight = spriteSheet.size
     spriteHeightFactor = app.cellWidth / imageHeight
-    print("factor: ", spriteHeightFactor)
     dirs = ["Up", "Left", "Down", "Right"]
     for row in range(4): # leftRow, rightRow, upRow, downRow 
         for col in range(spriteSheetCols):
@@ -199,28 +200,24 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
                             imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(spriteRow+1)))
                 #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
                 sprites[dir].append(sprite)
-        print(len(sprites[dir]))
     return sprites
 
-# def createPlayerSprites(app):
-#     app.playerSprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
-#     # referenced from Tze Hng Loke (tloke)
-#     app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
-#     imageWidth, imageHeight = app.playerSpriteSheet.size
-#     app.playerHeightFactor = imageHeight / app.cellHeight 
-#     rows = 21
-#     cols = 13
-#     spriteRows = [9, 11, 8, 10]
-#     dirs = ["Left", "Right", "Up", "Down"]
-#     for row in range(4): # leftRow, rightRow, upRow, downRow 
-#         for col in range(cols):
-#             if col < 9: 
-#                 spriteRow, dir = spriteRows[row], dirs[row]
-#                 sprite = app.playerSpriteSheet.crop((imageWidth/cols*col, imageHeight/rows*spriteRow, imageWidth/cols*(col+1) , imageHeight/rows*(spriteRow+1)))
-#                 scaledsprite = app.scaleImage(sprite, app.playerHeightFactor)
-#                 app.playerSprites[dir].append(scaledsprite)
-#         print(len(app.playerSprites[dir]))
-#     app.playerSpriteCounter = 0
+# cited from 
+# http://www.cs.cmu.edu/~112/notes/notes-graphics.html#installingModules
+# returns a dictionary of sprites based on spritesheet
+# spriteRows starts from index 0
+def createObjectSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spriteCols):
+    sprites = list()
+    # referenced from Tze Hng Loke (tloke)
+    imageWidth, imageHeight = spriteSheet.size
+    spriteHeightFactor = app.cellWidth / imageHeight
+    for col in range(spriteSheetCols):
+        if col < spriteCols: 
+            sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, 0, 
+                        imageWidth/spriteSheetCols*(col+1) , imageHeight))
+            #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+            sprites.append(sprite)
+    return sprites
 
 def createObjectInRoom(app):
     row, col = None, None
@@ -364,6 +361,7 @@ def mazeMode_redrawAll(app, canvas):
 
 def roomMode_timerFired(app):
     currTime = time.time()
+    app.portalSpriteCounter = (1 + app.portalSpriteCounter) % len(app.portalSprites)
     if currTime - app.bfsStartTime > 5:
         for enemy in app.roomEnemies:
             enemy.path = bfs(app.graph, (enemy.row, enemy.col),
@@ -442,7 +440,12 @@ def drawBullets(app, canvas):
 
 def drawPortal(app, canvas):
     if app.roomEnemies == []:
-        drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
+        sprite = app.portalSprites[app.portalSpriteCounter]
+        x0, y0, x1, y1 = getCellBounds(app, (app.portal.row, app.portal.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
 
 def roomMode_redrawAll(app, canvas):
     drawBoard(app, canvas)
