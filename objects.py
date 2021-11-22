@@ -34,18 +34,20 @@ class Bullet(object):
         self.dir = dir
 
     def checkCollision(self, enemyList):
+        loss = 10
         for enemy in enemyList:
             if self.row == enemy.row and self.col == enemy.col:
-                enemyList.remove(enemy)
+                enemy.health -= loss
+                if enemy.health < 0: enemyList.remove(enemy)
         return enemyList
-        # collision with wall occurs when bullet hits wall 
-        pass
 
 class Enemy(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
         self.dir = (0,1)
+        self.health = 100
         self.color = "red"
+        self.path = []
 
     def followPlayer(self, playerRow, playerCol):
         if self.row > playerRow: self.row -= 1
@@ -75,4 +77,8 @@ class Item(object):
     def collected(self, player):
         player.items[self.name] = player.items.get(self.name, 0) + 1
 
+class Portal(object):
+    def __init__(self, row, col):
+        self.row, self.col = row, col
+    
     

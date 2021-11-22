@@ -69,14 +69,20 @@ def appStarted(app):
 
         app.roomItems = []
         app.walls, app.wallsCoords = createWalls(app)
-        createEnemies(app)
-        print("start graph")
+        # print("start graph")
         app.graph = createRoomGraph(app)
-        print(app.graph.table)
-        app.path = bfs(app.graph, (app.enemy.row, app.enemy.col),
-                        (app.player.row, app.player.col) )
-        print(app.path)
-        app.enemySteps = 0
+        # print(app.graph.table)
+        # can proceed to add more enemies into list later on 
+        app.enemyCount = 1
+        app.roomEnemies = []
+        for i in range(app.enemyCount):
+            row, col = createObjectInRoom(app)
+            app.roomEnemies.append(Enemy(row, col))
+        for enemy in app.roomEnemies:
+            enemy.path = bfs(app.graph, (enemy.row, enemy.col),
+                (app.player.row, app.player.col) )
+        row, col = createObjectInRoom(app)
+        app.portal = Portal(row, col)
 
     elif app.mode == "bossMode":
         bossRoomInit(app)
@@ -215,21 +221,19 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
 #         print(len(app.playerSprites[dir]))
 #     app.playerSpriteCounter = 0
 
-def createEnemies(app):
+def createObjectInRoom(app):
     row, col = None, None
     while True: 
-        if isLegalEnemy(app, row, col): break
+        if isLegalPlacement(app, row, col): break
         row, col = random.randint(0, app.rows), random.randint(0, app.cols)
-    app.enemy = Enemy(row, col) 
+    return row, col
     # should make it smartly generate not in a wall
 
-def isLegalEnemy(app, row, col):
+def isLegalPlacement(app, row, col):
     return (row != None and col != None and
            0 <= row < app.rows and
            0 <= col < app.cols and
            (row, col) not in app.wallsCoords)
-
-
 
 def drawPlayer(app, canvas):
     # draw player sprite
@@ -253,9 +257,11 @@ def getSpriteInFrame(app, character, sprites, spriteCounter):
 
 def drawEnemies(app, canvas):
     # draw sprite
-    sprite, cx, cy = getSpriteInFrame(app, app.enemy, 
-                    app.enemySprites, app.enemySpriteCounter)
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    for enemy in app.roomEnemies:
+        sprite, cx, cy = getSpriteInFrame(app, enemy, 
+                        app.enemySprites, app.enemySpriteCounter)
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    
     # draw basic enemy
     # temporarily having only 1 enemy
     # enemy = app.enemy 
@@ -346,31 +352,30 @@ def mazeMode_redrawAll(app, canvas):
 
 def roomMode_timerFired(app):
     currTime = time.time()
-    player = app.player.row, app.player.col
-    enemy = app.enemy.row, app.enemy.col
     if currTime - app.bfsStartTime > 5:
-        app.path = bfs(app.graph, enemy, player)
-        app.enemySteps = 0
+        for enemy in app.roomEnemies:
+            enemy.path = bfs(app.graph, (enemy.row, enemy.col),
+                (app.player.row, app.player.col) )
         app.dfsStartTime = time.time()
     if currTime - app.startTime > 0.3:
-        print("path: ", app.path)
-        if app.path != []:
-            app.enemySteps += 1
-            prevRow, prevCol = app.enemy.row, app.enemy.col
-            app.enemy.row, app.enemy.col = app.path.pop()
-            app.enemy.dir = (app.enemy.row - prevRow, app.enemy.col - prevCol)
-            print(prevRow, prevCol, app.enemy.row, app.enemy.col, app.enemy.dir)
-            print("moved", app.enemy.row, app.enemy.col)
-        # for enemy in app.roomEnemies:
-        #    enemy.followPlayer(app.player.row, app.player.col)
+        for enemy in app.roomEnemies:
+            if enemy.path != []:
+                prevRow, prevCol = enemy.row, enemy.col
+                enemy.row, enemy.col = enemy.path.pop()
+                enemy.dir = (enemy.row - prevRow, enemy.col - prevCol)
+                print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
+                print("moved", enemy.row, enemy.col)
         app.startTime = time.time()
     for bullet in app.player.bullets:
         print("bullet:", bullet)
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
-        # can't check collision because currently using single enemy instead of enemy list
-        # app.roomEnemies = bullet.checkCollision(app.roomEnemies)
+        app.roomEnemies = bullet.checkCollision(app.roomEnemies)
+    if app.roomEnemies == []:
+        if (app.player.row, app.player.col == app.portal.row, app.portal.col):
+            print("Congrats! Proceeding to new stage...")
+            app.mode == "bossMode"
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
@@ -412,6 +417,9 @@ def drawBullets(app, canvas):
     for bullet in app.player.bullets:
         drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
+def drawPortal(app, canvas):
+    if app.roomEnemies == []:
+        drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
 
 def roomMode_redrawAll(app, canvas):
     drawBoard(app, canvas)
@@ -419,6 +427,7 @@ def roomMode_redrawAll(app, canvas):
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
     drawBullets(app, canvas)
+    drawPortal(app, canvas)
 
 
 #########################################################
