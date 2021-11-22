@@ -23,7 +23,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
+    app.mode = "bossMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
     if app.mode == "splashscreenMode":
