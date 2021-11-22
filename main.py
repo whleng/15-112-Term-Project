@@ -31,6 +31,7 @@ def appStarted(app):
         createButtons(app)
   
     app.startTime = time.time()
+    app.bfsStartTime = time.time()
     app.arrowKeys = ["Up", "Right", "Down", "Left"]
     # "Up", "Right", "Down", "Left"
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
@@ -43,7 +44,11 @@ def appStarted(app):
     # app.cellHeight = app.gridHeight / app.rows
 
     app.player = Player()
-    createPlayerSprites(app)
+#    createPlayerSprites(app)
+    app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
+    app.playerSprites = createMovingSprites(app, app.playerSpriteSheet, 
+                    21, 13, [9, 11, 8, 10], 9)
+    app.playerSpriteCounter = 0
 
     # mazeMode    
     if app.mode == "mazeMode":
@@ -57,6 +62,8 @@ def appStarted(app):
     # roomMode
     elif app.mode == "roomMode":
         app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
+        app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
+
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
         # app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
         # while True:
@@ -172,6 +179,25 @@ def playerControls(app, event):
 
 # cited from 
 # http://www.cs.cmu.edu/~112/notes/notes-graphics.html#installingModules
+
+
+def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spriteRows, spriteCols):
+    sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
+    # referenced from Tze Hng Loke (tloke)
+    imageWidth, imageHeight = spriteSheet.size
+    spriteHeightFactor = imageHeight / app.cellHeight 
+    dirs = ["Left", "Right", "Up", "Down"]
+    for row in range(4): # leftRow, rightRow, upRow, downRow 
+        for col in range(spriteSheetCols):
+            if col < spriteCols: 
+                spriteRow, dir = spriteRows[row], dirs[row]
+                sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, imageHeight/spriteSheetRows*spriteRow, 
+                            imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(spriteRow+1)))
+                scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+                sprites[dir].append(scaledsprite)
+        print(len(sprites[dir]))
+    return sprites
+
 def createPlayerSprites(app):
     app.playerSprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
     # referenced from Tze Hng Loke (tloke)
@@ -309,10 +335,11 @@ def roomMode_timerFired(app):
     currTime = time.time()
     player = app.player.row, app.player.col
     enemy = app.enemy.row, app.enemy.col
-    if app.enemySteps > 10:
+    if currTime - app.bfsStartTime > 5:
         app.path = bfs(app.graph, enemy, player)
-        app.path.pop()
+        if app.path != []: app.path.pop()
         app.enemySteps = 0
+        app.dfsStartTime = time.time()
     if currTime - app.startTime > 0.3:
         print("path: ", app.path)
         if app.path != []:

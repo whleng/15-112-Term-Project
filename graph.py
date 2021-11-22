@@ -46,10 +46,10 @@ def constructPath(solution, startNode, targetNode):
     currNode = targetNode
     path = [currNode]
     while True:
+        if currNode == startNode: break
         prevNode = solution[currNode] 
         path.append(prevNode)
         currNode = prevNode
-        if currNode == startNode: break
     return path
 
 def solve(startNode, targetNode, graph, visited, solution):
@@ -71,7 +71,7 @@ def solve(startNode, targetNode, graph, visited, solution):
 
 from queue import *
 
-# referenced from TA lecture on graph algorithms
+# referenced from TA lecture: Graph Algorithm
 def bfs(graph, startNode, targetNode):
     visited = set()
     solution = dict()
@@ -179,6 +179,7 @@ def getNeighbours(app, rows, cols, row, col, visited):
 
 from queue import PriorityQueue
 
+# referenced from TA lecture: Graph Algorithm
 def dijksrta():
     allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
     graph = Graph()
