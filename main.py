@@ -25,7 +25,7 @@ def gameDimensions():
 def appStarted(app):
     app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
     app.cx, app.cy = app.width//2, app.height//2
-    
+    app.timerDelay = 10
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
@@ -366,16 +366,27 @@ def roomMode_timerFired(app):
                 print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
                 print("moved", enemy.row, enemy.col)
         app.startTime = time.time()
+    for enemy in app.roomEnemies:
+        #for bullet in enemy.bullets:
+        #    app.player = enemy.bullet.checkCollision(app.player)
+        if (enemy.row, enemy.col) == (app.player.row, app.player.col):
+            app.player.health -= 10
+            if app.player.health < 0: 
+                print("GAME OVER!")
+                app.mode = "gameOverMode"
     for bullet in app.player.bullets:
         print("bullet:", bullet)
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
-        app.roomEnemies = bullet.checkCollision(app.roomEnemies)
+        for enemy in app.roomEnemies:
+            enemy = bullet.checkCollision(enemy)
+            if enemy.health < 0: 
+                app.roomEnemies.remove(enemy)
     if app.roomEnemies == []:
-        if (app.player.row, app.player.col == app.portal.row, app.portal.col):
+        if ((app.player.row, app.player.col) == (app.portal.row, app.portal.col)):
             print("Congrats! Proceeding to new stage...")
-            app.mode == "bossMode"
+            app.mode = "bossMode"
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):

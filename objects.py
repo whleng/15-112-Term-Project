@@ -33,14 +33,12 @@ class Bullet(object):
         self.row, self.col = row, col
         self.dir = dir
 
-    def checkCollision(self, enemyList):
-        loss = 60
-        for enemy in enemyList:
-            if self.row == enemy.row and self.col == enemy.col:
-                enemy.health -= loss
-                print(enemy.health)
-                if enemy.health < 0: enemyList.remove(enemy)
-        return enemyList
+    def checkCollision(self, target):
+        loss = 10
+        if self.row == target.row and self.col == target.col:
+            target.health -= loss
+            print(target.health)
+        return target
 
 class Enemy(object):
     def __init__(self, row, col):
