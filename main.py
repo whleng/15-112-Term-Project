@@ -190,8 +190,8 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
                 spriteRow, dir = spriteRows[row], dirs[row]
                 sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, imageHeight/spriteSheetRows*spriteRow, 
                             imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(spriteRow+1)))
-                scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
-                sprites[dir].append(scaledsprite)
+                #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+                sprites[dir].append(sprite)
         print(len(sprites[dir]))
     return sprites
 
@@ -236,6 +236,7 @@ def drawPlayer(app, canvas):
     sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
+    
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     # # draw basic player
