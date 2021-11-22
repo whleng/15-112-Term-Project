@@ -89,6 +89,7 @@ def bfs(graph, startNode, targetNode):
                 visited.add(neighbour)
     solution = constructPath(solution, startNode, targetNode)
     # print(solution)
+    if solution != []: solution.pop()
     return solution
 
 # bfs() # uncomment to test dfs

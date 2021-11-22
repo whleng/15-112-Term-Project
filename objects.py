@@ -44,6 +44,7 @@ class Bullet(object):
 class Enemy(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
+        self.dir = (0,1)
         self.color = "red"
 
     def followPlayer(self, playerRow, playerCol):

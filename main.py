@@ -44,15 +44,14 @@ def appStarted(app):
     # app.cellHeight = app.gridHeight / app.rows
 
     app.player = Player()
-#    createPlayerSprites(app)
+    # createPlayerSprites(app)
     app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
     app.playerSprites = createMovingSprites(app, app.playerSpriteSheet, 
-                    21, 13, [9, 11, 8, 10], 9)
+                    21, 13, range(8,12), 9)
     app.playerSpriteCounter = 0
 
     # mazeMode    
     if app.mode == "mazeMode":
-        
         # app.enemy = Enemy(5,5)
         app.graph = prim(app)
         app.path = bfs(app.graph, 
@@ -63,14 +62,11 @@ def appStarted(app):
     elif app.mode == "roomMode":
         app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
         app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
-
+        app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
+        app.enemySpriteCounter = 0
+        
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-        # app.roomEnemies = [ Enemy(5,5), Enemy(8,8) ]
-        # while True:
-        #     x, y = random.randint(0, app.rows-1), random.rand(0, app.cols-1)
-        #     if (x,y) not in app.wallsCoords:
-        #         app.enemy = Enemy(x,y)
-        #         break
+
         app.roomItems = []
         app.walls, app.wallsCoords = createWalls(app)
         createEnemies(app)
@@ -179,14 +175,15 @@ def playerControls(app, event):
 
 # cited from 
 # http://www.cs.cmu.edu/~112/notes/notes-graphics.html#installingModules
-
-
+# returns a dictionary of sprites based on spritesheet
+# spriteRows starts from index 0
 def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spriteRows, spriteCols):
-    sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
+    sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} 
     # referenced from Tze Hng Loke (tloke)
     imageWidth, imageHeight = spriteSheet.size
-    spriteHeightFactor = imageHeight / app.cellHeight 
-    dirs = ["Left", "Right", "Up", "Down"]
+    spriteHeightFactor = app.cellWidth / imageHeight
+    print("factor: ", spriteHeightFactor)
+    dirs = ["Up", "Left", "Down", "Right"]
     for row in range(4): # leftRow, rightRow, upRow, downRow 
         for col in range(spriteSheetCols):
             if col < spriteCols: 
@@ -198,25 +195,25 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
         print(len(sprites[dir]))
     return sprites
 
-def createPlayerSprites(app):
-    app.playerSprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
-    # referenced from Tze Hng Loke (tloke)
-    app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
-    imageWidth, imageHeight = app.playerSpriteSheet.size
-    app.playerHeightFactor = imageHeight / app.cellHeight 
-    rows = 21
-    cols = 13
-    spriteRows = [9, 11, 8, 10]
-    dirs = ["Left", "Right", "Up", "Down"]
-    for row in range(4): # leftRow, rightRow, upRow, downRow 
-        for col in range(cols):
-            if col < 9: 
-                spriteRow, dir = spriteRows[row], dirs[row]
-                sprite = app.playerSpriteSheet.crop((imageWidth/cols*col, imageHeight/rows*spriteRow, imageWidth/cols*(col+1) , imageHeight/rows*(spriteRow+1)))
-                scaledsprite = app.scaleImage(sprite, app.playerHeightFactor)
-                app.playerSprites[dir].append(scaledsprite)
-        print(len(app.playerSprites[dir]))
-    app.playerSpriteCounter = 0
+# def createPlayerSprites(app):
+#     app.playerSprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} # "Up", "Right", "Down", "Left"
+#     # referenced from Tze Hng Loke (tloke)
+#     app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
+#     imageWidth, imageHeight = app.playerSpriteSheet.size
+#     app.playerHeightFactor = imageHeight / app.cellHeight 
+#     rows = 21
+#     cols = 13
+#     spriteRows = [9, 11, 8, 10]
+#     dirs = ["Left", "Right", "Up", "Down"]
+#     for row in range(4): # leftRow, rightRow, upRow, downRow 
+#         for col in range(cols):
+#             if col < 9: 
+#                 spriteRow, dir = spriteRows[row], dirs[row]
+#                 sprite = app.playerSpriteSheet.crop((imageWidth/cols*col, imageHeight/rows*spriteRow, imageWidth/cols*(col+1) , imageHeight/rows*(spriteRow+1)))
+#                 scaledsprite = app.scaleImage(sprite, app.playerHeightFactor)
+#                 app.playerSprites[dir].append(scaledsprite)
+#         print(len(app.playerSprites[dir]))
+#     app.playerSpriteCounter = 0
 
 def createEnemies(app):
     row, col = None, None
@@ -232,6 +229,8 @@ def isLegalEnemy(app, row, col):
            0 <= col < app.cols and
            (row, col) not in app.wallsCoords)
 
+
+
 def drawPlayer(app, canvas):
     # draw player sprite
     sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
@@ -242,10 +241,24 @@ def drawPlayer(app, canvas):
     # # draw basic player
     # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
 
+# takes in the character and returns the current sprite to be used
+def getSpriteInFrame(app, character, sprites, spriteCounter):
+    print("here", character.dir)
+    sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
+    x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
+    cx, cy = (x0+x1)//2, (y0+y1)//2
+    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    return sprite, cx, cy
+
 def drawEnemies(app, canvas):
+    # draw sprite
+    sprite, cx, cy = getSpriteInFrame(app, app.enemy, 
+                    app.enemySprites, app.enemySpriteCounter)
+    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # draw basic enemy
     # temporarily having only 1 enemy
-    enemy = app.enemy 
-    drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
+    # enemy = app.enemy 
+    # drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
     # for enemy in app.roomEnemies:
     #    drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
 
@@ -266,7 +279,6 @@ def mazeMode_timerFired(app):
     enemy = app.enemy.row, app.enemy.col
     if currTime - app.startTime > 1:
         app.path = bfs(app.graph, enemy, player)
-        app.path.pop()
         print(app.path)
         if app.path != []:
             app.enemy.row, app.enemy.col = app.path.pop()
@@ -328,7 +340,7 @@ def mazeMode_redrawAll(app, canvas):
     
 
 #########################################################
-# ROOM MODE
+# ROOM MODE 
 #########################################################
 
 def roomMode_timerFired(app):
@@ -337,14 +349,16 @@ def roomMode_timerFired(app):
     enemy = app.enemy.row, app.enemy.col
     if currTime - app.bfsStartTime > 5:
         app.path = bfs(app.graph, enemy, player)
-        if app.path != []: app.path.pop()
         app.enemySteps = 0
         app.dfsStartTime = time.time()
     if currTime - app.startTime > 0.3:
         print("path: ", app.path)
         if app.path != []:
             app.enemySteps += 1
+            prevRow, prevCol = app.enemy.row, app.enemy.col
             app.enemy.row, app.enemy.col = app.path.pop()
+            app.enemy.dir = (app.enemy.row - prevRow, app.enemy.col - prevCol)
+            print(prevRow, prevCol, app.enemy.row, app.enemy.col, app.enemy.dir)
             print("moved", app.enemy.row, app.enemy.col)
         # for enemy in app.roomEnemies:
         #    enemy.followPlayer(app.player.row, app.player.col)
