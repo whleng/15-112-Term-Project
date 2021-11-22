@@ -86,4 +86,6 @@ class Portal(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
     
-    
+class Door(object):
+    def __init__(self, row, col):
+        self.row, self.col = row, col

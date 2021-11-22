@@ -23,7 +23,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "bossMode" 
+    app.mode = "mazeMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
@@ -52,17 +52,18 @@ def appStarted(app):
     app.playerSpriteCounter = 0
     app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
     app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
-        
+    app.doorSprite =  app.loadImage(r"Graphics/door.png")
     
-
     # mazeMode    
     if app.mode == "mazeMode":
-        # app.enemy = Enemy(5,5)
+        app.enemy = Enemy(5,5)
         app.graph = prim(app)
         app.path = bfs(app.graph, 
                     (app.enemy.row, app.enemy.col),
                     (app.player.row, app.player.col))
-
+        app.door = Door(random.randint(0, app.rows), random.randint(0, app.cols))
+        app.portal = Portal(random.randint(0, app.rows), random.randint(0, app.cols))
+        app.completedRooms = False
 
     # roomMode
     elif app.mode == "roomMode":
@@ -90,8 +91,6 @@ def appStarted(app):
         for enemy in app.roomEnemies:
             enemy.path = bfs(app.graph, (enemy.row, enemy.col),
                 (app.player.row, app.player.col) )
-        row, col = createObjectInRoom(app)
-        app.portal = Portal(row, col)
 
 
     elif app.mode == "bossMode":
@@ -276,13 +275,17 @@ def getSpriteInFrame(app, character, sprites, spriteCounter):
 
 def drawEnemies(app, canvas):
     # draw sprite
-    for enemy in app.roomEnemies:
-        sprite, cx, cy = getSpriteInFrame(app, enemy, 
-                        app.enemySprites, app.enemySpriteCounter)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
-        x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
-        drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
+    if app.mode == "roomMode":
+
+        for enemy in app.roomEnemies:
+            sprite, cx, cy = getSpriteInFrame(app, enemy, 
+                            app.enemySprites, app.enemySpriteCounter)
+            canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+            x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
+            drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
     
+    else:
+        pass
     # draw basic enemy
     # temporarily having only 1 enemy
     # enemy = app.enemy 
@@ -314,6 +317,16 @@ def mazeMode_timerFired(app):
         # for enemy in app.roomEnemies:
         #    enemy.followPlayer(app.player.row, app.player.col)
         app.startTime = time.time()
+        app.completedRooms = True
+
+    if ((app.player.row, app.player.col) == (app.door.row, app.door.col)):
+        print("Going to a room...")
+        app.mode = "roomMode"
+    
+    if app.completedRooms:
+        if ((app.player.row, app.player.col) == (app.portal.row, app.portal.col)):
+            print("Going to boss room...")
+            app.mode = "bossMode"
     
 def mazeMode_keyPressed(app, event):
     playerControls(app, event)
@@ -358,6 +371,15 @@ def drawMazeWall(app, canvas, node, neighbour):
         line = x0, y0, x0 + app.cellWidth, y0
     canvas.create_line(line)
 
+def drawPortal(app, canvas):
+    if app.roomEnemies == []:
+        sprite = app.portalSprites[app.portalSpriteCounter]
+        x0, y0, x1, y1 = getCellBounds(app, (app.portal.row, app.portal.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
+
 def mazeMode_redrawAll(app, canvas):
     drawGraph(app, canvas, app.graph)
     drawPlayer(app, canvas)
@@ -365,6 +387,9 @@ def mazeMode_redrawAll(app, canvas):
     # for debugging path-finding of enemy
     # for (row, col) in app.path:
     #        drawCell(app, canvas, row, col, "red")
+    drawDoor(app, canvas)
+    if app.completedRooms: drawPortal(app, canvas)
+    
     
 
 #########################################################
@@ -408,12 +433,9 @@ def roomMode_timerFired(app):
                 app.roomEnemies.remove(enemy)
     if app.roomEnemies == []:
         if ((app.player.row, app.player.col) == (app.portal.row, app.portal.col)):
-            if app.mode == "mazeMode":
-                print("Entering a room...")
-                app.mode = "roomMode"
-            elif app.mode == "roomMode":
-                print("Congrats! Proceeding to new stage...")
-                app.mode = "bossMode"
+            print("Congrats! Going back to maze...")
+            app.mode = "mazeMode"
+            app.completedRooms = True
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
@@ -461,14 +483,12 @@ def drawBullets(app, canvas):
 
     # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
-def drawPortal(app, canvas):
-    if app.roomEnemies == []:
-        sprite = app.portalSprites[app.portalSpriteCounter]
-        x0, y0, x1, y1 = getCellBounds(app, (app.portal.row, app.portal.col) )
-        cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
-    # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
+def drawDoor(app, canvas):
+    sprite = app.doorSprite
+    x0, y0, x1, y1 = getCellBounds(app, (app.door.row, app.door.col) )
+    cx, cy = (x0+x1)//2, (y0+y1)//2
+    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
 
 def roomMode_redrawAll(app, canvas):
@@ -477,7 +497,7 @@ def roomMode_redrawAll(app, canvas):
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
     drawBullets(app, canvas)
-    drawPortal(app, canvas)
+    if app.roomEnemies == []: drawDoor(app, canvas)
 
 
 #########################################################
