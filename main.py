@@ -67,7 +67,9 @@ def appStarted(app):
         app.portalSprite = app.loadImage(r"Graphics/portal.png")
         app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
         app.portalSpriteCounter = 0
-
+        app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
+        app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
+        
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
 
         app.roomItems = []
@@ -211,12 +213,13 @@ def createObjectSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
     # referenced from Tze Hng Loke (tloke)
     imageWidth, imageHeight = spriteSheet.size
     spriteHeightFactor = app.cellWidth / imageHeight
-    for col in range(spriteSheetCols):
-        if col < spriteCols: 
-            sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, 0, 
-                        imageWidth/spriteSheetCols*(col+1) , imageHeight))
-            #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
-            sprites.append(sprite)
+    for row in range(spriteSheetRows):
+        for col in range(spriteSheetCols):
+            if col < spriteCols: 
+                sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, imageHeight/spriteSheetRows*row, 
+                            imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(row+1)))
+                #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+                sprites.append(sprite)
     return sprites
 
 def createObjectInRoom(app):
@@ -388,7 +391,8 @@ def roomMode_timerFired(app):
         print("bullet:", bullet)
         drow, dcol = bullet.dir
         bullet.row += drow
-        bullet.col += dcol
+        bullet.col += dcol 
+        bullet.spriteCounter = (1 + bullet.spriteCounter) % len(app.bulletSprites)
         for enemy in app.roomEnemies:
             enemy = bullet.checkCollision(enemy)
             if enemy.health < 0: 
@@ -436,7 +440,13 @@ def drawRoomWalls(app, canvas):
 
 def drawBullets(app, canvas):
     for bullet in app.player.bullets:
-        drawCell(app, canvas, bullet.row, bullet.col, "yellow")
+        sprite = app.bulletSprites[bullet.spriteCounter]
+        x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+
+    # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
 def drawPortal(app, canvas):
     if app.roomEnemies == []:
@@ -446,6 +456,7 @@ def drawPortal(app, canvas):
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
+
 
 def roomMode_redrawAll(app, canvas):
     drawBoard(app, canvas)

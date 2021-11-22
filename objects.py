@@ -1,3 +1,8 @@
+class Sprite(object):
+    def __init__(self, character, spriteSheet):
+        self.character = character # e.g. app.player
+        self.spriteSheet = spriteSheet
+#        self.imageWidth, self.imageHeight = spriteSheet.size()
 
 class Player(object):
     def __init__(self):
@@ -32,6 +37,7 @@ class Bullet(object):
     def __init__(self, row, col, dir):
         self.row, self.col = row, col
         self.dir = dir
+        self.spriteCounter = 0
 
     def checkCollision(self, target):
         loss = 10
