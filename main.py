@@ -9,12 +9,12 @@ import time
 #########################################################
 # Variables
 
-WIDTH = 1300
-HEIGHT = 750
+WIDTH = 640
+HEIGHT = 640
 
 # returns the value of game dimensions
 def gameDimensions():
-    rows, cols, cellSize, margin = 20, 20, 30, 0 # 38, 65, 20, 0 
+    rows, cols, cellSize, margin = 15, 15, 30, 20 # 38, 65, 20, 0 
     # game dimensions can be changed here
     return (rows, cols, cellSize, margin)
 
@@ -23,7 +23,8 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "roomMode" # modes: mazeMode, roomMode, bossMode, splashscreenMode
+    app.mode = "bossMode" 
+    # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
     if app.mode == "splashscreenMode":
@@ -35,11 +36,11 @@ def appStarted(app):
     app.arrowKeys = ["Up", "Right", "Down", "Left"]
     # "Up", "Right", "Down", "Left"
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    app.rows, app.cols, app.cellSize, app.margin = gameDimensions()
+    app.rows, app.cols, _, app.margin = gameDimensions()
     app.gridWidth  = app.width - 2*app.margin
     app.gridHeight = app.height - 2*app.margin
-    app.cellWidth = app.cellSize
-    app.cellHeight = app.cellSize
+    app.cellWidth = app.gridWidth/app.rows
+    app.cellHeight = app.gridHeight/app.cols
     # app.cellWidth = app.gridWidth / app.cols
     # app.cellHeight = app.gridHeight / app.rows
 
@@ -49,6 +50,10 @@ def appStarted(app):
     app.playerSprites = createMovingSprites(app, app.playerSpriteSheet, 
                     21, 13, range(8,12), 9)
     app.playerSpriteCounter = 0
+    app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
+    app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
+        
+    
 
     # mazeMode    
     if app.mode == "mazeMode":
@@ -57,6 +62,7 @@ def appStarted(app):
         app.path = bfs(app.graph, 
                     (app.enemy.row, app.enemy.col),
                     (app.player.row, app.player.col))
+
 
     # roomMode
     elif app.mode == "roomMode":
@@ -67,8 +73,6 @@ def appStarted(app):
         app.portalSprite = app.loadImage(r"Graphics/portal.png")
         app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
         app.portalSpriteCounter = 0
-        app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
-        app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
         
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
 
@@ -89,9 +93,14 @@ def appStarted(app):
         row, col = createObjectInRoom(app)
         app.portal = Portal(row, col)
 
+
     elif app.mode == "bossMode":
         bossRoomInit(app)
+        app.bossSprite = app.loadImage(r"Graphics/man_eater_flower.png")
+        app.bossSprites = createMovingSprites(app, app.bossSprite, 4, 3, range(4), 3)
+        app.bossSpriteCounter = 0
 
+    
 #########################################################
 # SPLASHSCREEN MODE
 #########################################################
@@ -283,9 +292,9 @@ def drawEnemies(app, canvas):
 
 # draws one cell according to its row and col position
 def drawCell(app, canvas, row, col, cellColor):
-    x = app.margin + col * app.cellSize
-    y = app.margin + row * app.cellSize
-    canvas.create_oval(x, y, x + app.cellSize, y + app.cellSize,
+    x = app.margin + col * app.cellWidth
+    y = app.margin + row * app.cellHeight
+    canvas.create_oval(x, y, x + app.cellWidth, y + app.cellHeight,
                             fill=cellColor)
 
 #########################################################
@@ -340,13 +349,13 @@ def drawMazeWall(app, canvas, node, neighbour):
             x0, y0, x1, y1 = getCellBounds(app, node)
         else:  
             x0, y0, x1, y1 = getCellBounds(app, neighbour) # neighbour on right
-        line = x0, y0, x0, y0 + app.cellSize
+        line = x0, y0, x0, y0 + app.cellHeight
     elif nodeCol == neighbourCol:
         if nodeRow > neighbourRow: # node is on bottom of neighbour
             x0, y0, x1, y1 = getCellBounds(app, node)
         else:  # neighbour at bottom
             x0, y0, x1, y1 = getCellBounds(app, neighbour)
-        line = x0, y0, x0 + app.cellSize, y0
+        line = x0, y0, x0 + app.cellWidth, y0
     canvas.create_line(line)
 
 def mazeMode_redrawAll(app, canvas):
@@ -399,8 +408,12 @@ def roomMode_timerFired(app):
                 app.roomEnemies.remove(enemy)
     if app.roomEnemies == []:
         if ((app.player.row, app.player.col) == (app.portal.row, app.portal.col)):
-            print("Congrats! Proceeding to new stage...")
-            app.mode = "bossMode"
+            if app.mode == "mazeMode":
+                print("Entering a room...")
+                app.mode = "roomMode"
+            elif app.mode == "roomMode":
+                print("Congrats! Proceeding to new stage...")
+                app.mode = "bossMode"
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
@@ -412,9 +425,9 @@ def roomMode_keyPressed(app, event):
 
 # draws one cell according to its row and col position
 def drawCell(app, canvas, row, col, cellColor):
-    x = app.margin + col * app.cellSize
-    y = app.margin + row * app.cellSize
-    canvas.create_rectangle(x, y, x + app.cellSize, y + app.cellSize,
+    x = app.margin + col * app.cellWidth
+    y = app.margin + row * app.cellHeight
+    canvas.create_rectangle(x, y, x + app.cellWidth, y + app.cellHeight,
                             fill=cellColor)
 
 # draws every individual cell in the board
@@ -443,7 +456,7 @@ def drawBullets(app, canvas):
         sprite = app.bulletSprites[bullet.spriteCounter]
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
     # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
@@ -510,6 +523,40 @@ def bossMode_timerFired(app):
         bullet.row += drow
         bullet.col += dcol
 
+
+def drawBossRoomBullets(app, canvas):
+    for bullet in app.player.bullets:
+        sprite = app.bulletSprites[bullet.spriteCounter]
+        x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    
+    for bullet in app.boss.bullets:
+        sprite = app.bulletSprites[bullet.spriteCounter]
+        x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+
+    # for bullet in app.player.bullets:
+    #     drawCell(app, canvas, bullet.row, bullet.col, "yellow")
+
+    # for bullet in app.boss.bullets:
+    #     drawCell(app, canvas, bullet.row, bullet.col, "yellow")
+
+def drawBoss(app, canvas):
+    # static image of boss right now
+    sprite = app.bossSprites["Down"][app.bossSpriteCounter]
+    x0, y0, x1, y1 = getCellBounds(app, (app.boss.y, app.boss.x) )
+    cx, cy = (x0+x1)//2, (y0+y1)//2
+    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    drawHealthBar(app, canvas, app.boss, x0, y0, x1, y1)
+    
+    # drawCell(app, canvas, app.boss.y, app.boss.x, "green")
+
+
 def bossMode_redrawAll(app, canvas):
     print(app.gameEvent)
     print(app.boss.x, app.boss.y)
@@ -517,5 +564,16 @@ def bossMode_redrawAll(app, canvas):
     drawPlayer(app, canvas)
     drawBoss(app, canvas)
     drawBossRoomBullets(app, canvas)
+
+
+#######################################################
+# END GAME
+#######################################################
+
+def winMode_redrawAll(app, canvas):
+    pass
+
+def loseMode_redrawAll(app, canvas):
+    pass
 
 runApp(width=WIDTH, height=HEIGHT)

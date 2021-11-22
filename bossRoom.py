@@ -47,6 +47,8 @@ class Boss(object):
         self.x = random.randint(0, maxWidth)
         self.y = random.randint(0, maxHeight) 
         self.mass = 50
+        self.dir = (0,1)
+        self.health = 100
         # initialises the starting state
         self.state = idleState() 
         self.sheild = False
@@ -57,7 +59,7 @@ class Boss(object):
         self.state = self.state.on_event(app, event)
 
 def defend(app):
-    step = 5
+    step = 1
     app.boss.shield = True
     for bullet in app.player.bullets:
         if isInRange(app, bullet, app.boss):
@@ -109,28 +111,11 @@ def convertDirections(app, dir):
     elif dir in app.arrowKeys: # in arrow key form
         return app.directions[app.arrowKeys.index(dir)]
 
-# draws one cell according to its row and col position
-def drawCell(app, canvas, row, col, cellColor):
-    x = app.margin + col * app.cellSize
-    y = app.margin + row * app.cellSize
-    canvas.create_oval(x, y, x + app.cellSize, y + app.cellSize,
-                            fill=cellColor)
-
-def drawBossRoomBullets(app, canvas):
-    for bullet in app.player.bullets:
-        drawCell(app, canvas, bullet.row, bullet.col, "yellow")
-
-    for bullet in app.boss.bullets:
-        drawCell(app, canvas, bullet.row, bullet.col, "yellow")
-
-def drawBoss(app, canvas):
-    drawCell(app, canvas, app.boss.y, app.boss.x, "green")
-
-def redrawAll(app, canvas):
-    drawBoard(app, canvas)
-    drawPlayer(app, canvas)
-    drawBoss(app, canvas)
-    drawBossRoomBullets(app, canvas)
+# def redrawAll(app, canvas):
+#     drawBoard(app, canvas)
+#     drawPlayer(app, canvas)
+#     drawBoss(app, canvas)
+#     drawBossRoomBullets(app, canvas)
 
 # runApp(width=400, height=400)
 
