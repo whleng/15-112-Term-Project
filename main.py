@@ -64,7 +64,8 @@ def appStarted(app):
         app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
         app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
         app.enemySpriteCounter = 0
-        
+        app.portalSprite = app.loadImage(r"Graphics/portal.png")
+
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
 
         app.roomItems = []
@@ -270,6 +271,9 @@ def drawEnemies(app, canvas):
         sprite, cx, cy = getSpriteInFrame(app, enemy, 
                         app.enemySprites, app.enemySpriteCounter)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+        x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
+        drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
+    
     # draw basic enemy
     # temporarily having only 1 enemy
     # enemy = app.enemy 
