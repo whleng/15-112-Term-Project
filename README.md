@@ -3,6 +3,13 @@
 This is my 15-112 Term Project
 
 Graphics
+* Win game background
+- https://www.wallpapertip.com/wpic/oiTbTR_dungeon-of-the-endless-card-dungeon-of-the/
+* Game over background
+- https://www.istockphoto.com/photo/bloody-background-scary-old-cement-wall-and-floor-gm1036645414-277488812
+* Door
+- https://www.kindpng.com/imgv/howohwb_pixel-door-sprite-sheet-hd-png-download/
+* 
 * Bullets
 - https://www.pngegg.com/en/png-cfgjc
 * Dungeon background (in roomMode):
