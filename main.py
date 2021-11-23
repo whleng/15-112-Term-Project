@@ -175,7 +175,7 @@ def initSprites(app):
     app.barrelSprite = app.loadImage(r"Graphics/barrel.png")
 
     app.lavaSprite = app.loadImage(r"Graphics/lava.png")
-    app.invisibilityPotionSprite = app.loadImage(r"Graphics/invisibility.png")
+    app.invisibilityPotionSprite = app.loadImage(r"Graphics/blue potion.png")
 
 
 def drawHealthBar(app, canvas, character, x0, y0, x1, y1):

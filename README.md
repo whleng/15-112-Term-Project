@@ -9,7 +9,8 @@
 * Defeat the boss to win the game
 
 <h2> Assets </h2>
-
+* Invisibility Potion (blue potion):
+    * https://pixelartmaker-data-78746291193.nyc3.digitaloceanspaces.com/image/b729fb38af45684.png
 * Hourglass:
     * https://www.flaticon.com/free-icon/hourglass_3208746
 * HealthBooster:
