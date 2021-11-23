@@ -23,7 +23,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "mazeMode" 
+    app.mode = "loseMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
@@ -71,6 +71,17 @@ def appStarted(app):
     elif app.mode == "bossMode":
         initBossModeParams(app)
         
+
+    bkgd = app.loadImage(r"Graphics/gameOver.jpg")
+    imageWidth, imageHeight = bkgd.size
+    imagecx, imagecy = imageWidth//2, imageHeight//2
+    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
+    app.loseModeImage =  bkgd.crop(cropCoords)
+    bkgd = app.loadImage(r"Graphics/winGame.jpg")
+    imageWidth, imageHeight = bkgd.size
+    imagecx, imagecy = imageWidth//2, imageHeight//2
+    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
+    app.winModeImage =  bkgd.crop(cropCoords)
     
 #########################################################
 # SPLASHSCREEN MODE
@@ -306,7 +317,7 @@ def mazeMode_timerFired(app):
     #     app.startTime = time.time()
 
     if ((app.player.row, app.player.col) == (app.door.row, app.door.col)):
-        if not app.compltedRooms:
+        if not app.completedRooms:
             print("Going to a room...")
             app.mode = "roomMode"
         
@@ -408,6 +419,8 @@ def initRoomModeParams(app):
     for enemy in app.roomEnemies:
         enemy.path = bfs(app.roomGraph, (enemy.row, enemy.col),
             (app.player.row, app.player.col) )
+
+    app.enemyStepTime = 0.3
     row, col = createObjectInRoom(app)
     app.healthBooster = HealthBooster(row, col)
 
@@ -419,7 +432,7 @@ def roomMode_timerFired(app):
             enemy.path = bfs(app.roomGraph, (enemy.row, enemy.col),
                 (app.player.row, app.player.col) )
         app.dfsStartTime = time.time()
-    if currTime - app.startTime > 0.3:
+    if currTime - app.startTime > app.enemyStepTime:
         for enemy in app.roomEnemies:
             if enemy.path != []:
                 prevRow, prevCol = enemy.row, enemy.col
@@ -623,7 +636,7 @@ def drawBoss(app, canvas):
 def bossMode_redrawAll(app, canvas):
     print(app.gameEvent)
     print(app.boss.x, app.boss.y)
-    drawBoard(app, canvas)
+    # drawBoard(app, canvas)
     drawPlayer(app, canvas)
     drawBoss(app, canvas)
     drawBossRoomBullets(app, canvas)
@@ -634,9 +647,13 @@ def bossMode_redrawAll(app, canvas):
 #######################################################
 
 def winMode_redrawAll(app, canvas):
-    canvas.create_text(app.width//2, app.height//2, text="You win")
+    
+    canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.winModeImage))
+    canvas.create_text(app.width//2, app.height//2, text="YOU HAVE ESCAPED!", font="Arial 30", fill="white")
 
 def loseMode_redrawAll(app, canvas):
-    canvas.create_text(app.width//2, app.height//2, text="You lose")
+    
+    canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.loseModeImage))
+    canvas.create_text(app.width//2, app.height//2, text="GAME OVER!", font="Arial 30", fill="white")
 
 runApp(width=WIDTH, height=HEIGHT)
