@@ -227,12 +227,13 @@ def mazeMode_timerFired(app):
 
     else:
         for door in app.doors:
-            if door.checkCollision(player):
+            if door.checkCollision(player) and door.roomNum not in app.visitedRooms:
                 print("Going to a room...")
                 app.mode = "roomMode"
                 app.currRoomNum = door.roomNum
                 app.currRoom = app.rooms[app.currRoomNum]
                 app.player.row, app.player.col = (0,0)
+                app.visitedRooms.add(door.roomNum)
         
     
 def mazeMode_keyPressed(app, event):
@@ -288,7 +289,7 @@ def drawPortal(app, canvas):
 
 def mazeMode_redrawAll(app, canvas):
     drawGraph(app, canvas, app.mazeGraph)
-    drawPlayer(app, canvas)
+    print(app.mazePlayer.row, app.mazePlayer.col)
     drawEnemies(app, canvas)
     # for debugging path-finding of enemy
     # for (row, col) in app.path:
@@ -297,7 +298,7 @@ def mazeMode_redrawAll(app, canvas):
         drawDoor(app, canvas, i)
     canvas.create_rectangle(app.margin, app.margin, app.gridWidth+app.margin, app.gridHeight+app.margin)
     if app.completedRooms: drawPortal(app, canvas)
-    
+    drawPlayer(app, canvas)
 
 #########################################################
 # ROOM MODE 
@@ -465,7 +466,12 @@ def drawBullets(app, canvas):
 
 def drawDoor(app, canvas, doorNum=None):
     sprite = app.doorSprite
-    x0, y0, x1, y1 = getCellBounds(app, app.doorCoords[doorNum] )
+    if app.mode == "roomMode":
+        x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.door.row, app.currRoom.door.col) )
+       
+    if app.mode == "mazeMode":
+        x0, y0, x1, y1 = getCellBounds(app, app.doorCoords[doorNum] )
+    
     cx, cy = (x0+x1)//2, (y0+y1)//2
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
@@ -495,7 +501,7 @@ def roomMode_redrawAll(app, canvas):
     drawHealthBooster(app, canvas)
     drawTimeFreezer(app, canvas)
 
-    if app.currRoom.roomEnemies == []: drawDoor(app, canvas, app.currRoomNum)
+    if app.currRoom.roomEnemies == []: drawDoor(app, canvas)
 
 
 #########################################################

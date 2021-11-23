@@ -113,7 +113,7 @@ class Room(object):
         self.occupiedCoords = copy.deepcopy(self.wallsCoords)
         self.occupiedCoords.add((app.player.row, app.player.col))
 
-        self.roomEnemies = []
+        
         for i in range(enemyCount):
             row, col = createObjectInRoom(app, self.occupiedCoords)
             self.roomEnemies.append(Enemy(row, col))
