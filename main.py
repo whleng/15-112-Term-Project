@@ -57,6 +57,7 @@ def appStarted(app):
     app.bulletSprites = app.bulletSprites[9:] # temporary fix  
     app.oneBulletSprite = app.loadImage(r"Graphics/oneBullet.png")
     app.doorSprite =  app.loadImage(r"Graphics/door.png")
+    app.openedDoorSprite =  app.loadImage(r"Graphics/openDoor.png")
     app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
     app.timeFreezerSprite = app.loadImage(r"Graphics/hourglass.png")
 
@@ -306,7 +307,6 @@ def mazeMode_redrawAll(app, canvas):
 
 def initRoomModeParams(app):
     app.player = Player()
-    app.enemyStepTime = 0.3
 
     # init graphics
     app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
@@ -363,15 +363,15 @@ def roomMode_timerFired(app):
     currTime = time.time()
 
     # health booster item
-    app.currRoom.healthBooster.checkCollision(app.player)
+    app.player = app.currRoom.healthBooster.checkCollision(app.player)
 
     # freeze time item
     if app.currRoom.timeFreezer.collected:
         if currTime - app.startFreezeTime > 10:
-            app.enemyStepTime = 0.3
+            app.currRoom.enemyStepTime = 0.3
     if app.currRoom.timeFreezer.checkCollision(app.player): 
         app.startFreezeTime = time.time()
-        app.enemyStepTime = 3
+        app.currRoom.enemyStepTime = 3
 
     # enemy recalculates path every 5s
     if currTime - app.bfsStartTime > 5:
@@ -381,7 +381,7 @@ def roomMode_timerFired(app):
         app.dfsStartTime = time.time()
 
     # enemy takes a step every interval of stepTime
-    if currTime - app.startTime > app.enemyStepTime:
+    if currTime - app.startTime > app.currRoom.enemyStepTime:
         for enemy in app.currRoom.roomEnemies:
             if enemy.path != []:
                 prevRow, prevCol = enemy.row, enemy.col
@@ -465,13 +465,16 @@ def drawBullets(app, canvas):
     # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
 def drawDoor(app, canvas, doorNum=None):
-    sprite = app.doorSprite
+    sprite = app.openedDoorSprite
+    
     if app.mode == "roomMode":
         x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.door.row, app.currRoom.door.col) )
        
     if app.mode == "mazeMode":
         x0, y0, x1, y1 = getCellBounds(app, app.doorCoords[doorNum] )
-    
+        if doorNum in app.visitedRooms:
+            sprite = app.doorSprite
+
     cx, cy = (x0+x1)//2, (y0+y1)//2
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))

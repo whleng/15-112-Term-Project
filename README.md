@@ -27,7 +27,7 @@ Graphics
 - https://cutewallpaper.org/21/dungeon-background/Best-56-Dungeon-Background-on-HipWallpaper-Dungeon-Boss-.jpg
 * Portal:
 - https://favpng.com/png_view/column-sprite-portal-video-game-film-png/Ed0S8uT5
-* Barrel, Big_worm, Chests, Man_eater_flower:
+* Barrel, Big_worm, Chests, Man_eater_flower, Ghost:
 - https://lpc.opengameart.org/static/lpc-style-guide/assets.html#objects
 * Dungeon floor:
 https://images.creativemarket.com/0.1.0/ps/120087/910/607/m1/fpnw/wm0/stonefloor001_large-.jpg?1401477523&s=aeb8c8fbad2e06ac22344908c9ad2c9e
