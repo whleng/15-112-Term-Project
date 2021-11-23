@@ -60,10 +60,10 @@ def appStarted(app):
     app.doorSprite =  app.loadImage(r"Graphics/door.png")
     app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
 
-    initRoomModeParams(app)
 
     if app.mode == "mazeMode":
         initMazeModeParams(app)
+        initRoomModeParams(app)
 
     elif app.mode == "roomMode":
         initRoomModeParams(app)
@@ -573,10 +573,12 @@ def bossMode_timerFired(app):
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
+        bullet.checkCollision(app.boss)
     for bullet in app.boss.bullets:
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
+        bullet.checkCollision(app.player)
     if app.boss.health < 0: app.winGame = True
     if app.player.health < 0: app.winGame = False
 
