@@ -2,11 +2,9 @@ from graph import *
 from generalFunctions import *
 
 
-class Sprite(object):
-    def __init__(self, character, spriteSheet):
-        self.character = character # e.g. app.player
-        self.spriteSheet = spriteSheet
-#        self.imageWidth, self.imageHeight = spriteSheet.size()
+################################################################
+# Character Objects
+################################################################
 
 class Player(object):
     def __init__(self, health=100, items=dict()):
@@ -21,41 +19,11 @@ class Player(object):
         self.spriteSheet = []
 
     def jump(self):
-        # skip one box when moving in a particular direction
         pass 
 
+    # generate bullets in self.dir
     def attack(self):
         bullet = Bullet(self.row, self.col, self.dir)
-        self.bullets.append( bullet )
-        # generate bullets in the direction it is facing
-        # bullets will keep moving with decreasing velocity 
-        # player will recoil when shooting bullets
-    
-class Item(object):
-    def __init__(self, row, col):
-        self.row, self.col = row, col
-
-    def activate(self, player):
-        pass
-
-class Bullet(object):
-    def __init__(self, row, col, dir):
-        self.row, self.col = row, col
-        self.dir = dir
-        self.spriteCounter = 0
-        self.spriteSheet = []
-
-    def checkCollision(self, target):
-        loss = 10
-        try:
-            if self.row == target.row and self.col == target.col:
-                target.health -= loss
-                print(target.health)
-        except:
-            if self.row == target.y and self.col == target.x:
-                target.health -= loss
-                print(target.health)
-        return target
 
 class Enemy(object):
     def __init__(self, row, col):
@@ -80,6 +48,30 @@ class Enemy(object):
         if self.row == target.row and self.col == target.col:
             return True
 
+ 
+class Bullet(object):
+    def __init__(self, row, col, dir):
+        self.row, self.col = row, col
+        self.dir = dir
+        self.spriteCounter = 0
+        self.spriteSheet = []
+
+    def checkCollision(self, target):
+        loss = 10
+        try:
+            if self.row == target.row and self.col == target.col:
+                target.health -= loss
+                print(target.health)
+        except:
+            if self.row == target.y and self.col == target.x:
+                target.health -= loss
+                print(target.health)
+        return target
+
+################################################################
+# Static Room Objects
+################################################################
+
 class Wall(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
@@ -91,13 +83,6 @@ class Wall(object):
 
     def __repr__(self):
         return str( (self. row, self.col) )
-
-class Item(object):
-    def __init__(self, name):
-        self.name = name
-
-    def collected(self, player):
-        player.items[self.name] = player.items.get(self.name, 0) + 1
 
 class Portal(object):
     def __init__(self, row, col):
@@ -117,6 +102,10 @@ class Door(object):
         if self.row == target.row and self.col == target.col:
             return True
 
+################################################################
+# Collectable Room Objects
+################################################################
+
 class HealthBooster(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
@@ -124,7 +113,8 @@ class HealthBooster(object):
 
     def checkCollision(self, target):
         gain = 10
-        if self.row == target.row and self.col == target.col and self.collected == False:
+        if (self.row == target.row and self.col == target.col 
+            and self.collected == False):
             target.health += gain
             self.collected = True
             print("HEALTH!")
@@ -137,8 +127,17 @@ class TimeFreezer(object):
 
     def checkCollision(self, target):
         gain = 10
-        if self.row == target.row and self.col == target.col and self.collected == False:
+        if (self.row == target.row and self.col == target.col 
+            and self.collected == False):
             self.collected = True
             return True
         return False
  
+# combat items for boss fight
+class Item(object):
+    def __init__(self, name, row, col):
+        self.name = name
+        self.row, self.col = row, col
+
+    def collected(self, player):
+        player.items[self.name] = player.items.get(self.name, 0) + 1

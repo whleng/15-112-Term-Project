@@ -14,17 +14,17 @@
     * https://www.flaticon.com/free-icon/hourglass_3208746
 * HealthBooster:
     - https://www.gamedevmarket.net/asset/voxel-health-potion/
-* Door
+* Door (openDoor, door, doors):
     - https://www.kindpng.com/imgv/howohwb_pixel-door-sprite-sheet-hd-png-download/
-* Bullets
+* Bullets (bullets, bullet):
     - https://www.pngegg.com/en/png-cfgjc
 * Portal:
     - https://favpng.com/png_view/column-sprite-portal-video-game-film-png/Ed0S8uT5
-* Barrel, Big_worm, Chests, Man_eater_flower:
+* Barrel, Big_worm, Chests, Cup, Ghost, Man_eater_flower:
     - https://lpc.opengameart.org/static/lpc-style-guide/assets.html#objects
-* Wall sprite:
+* Wall:
     - https://cdnb.artstation.com/p/assets/images/images/011/210/507/large/kim-shein-wall-sprite.jpg?1528384411
-* Player:
+* Player (walkingLeft, walkingRight, player):
     - body/male/human/white.png: by Stephen Challener (Redshrike), Johannes Sjölund (wulax). License(s): CC-BY-SA 3.0, GPL 3.0. 
         - https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
         - https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
@@ -46,7 +46,7 @@
     - https://www.wallpapertip.com/wpic/oiTbTR_dungeon-of-the-endless-card-dungeon-of-the/
 * Game over background
     - https://www.istockphoto.com/photo/bloody-background-scary-old-cement-wall-and-floor-gm1036645414-277488812
-* Dungeon background (in roomMode):
+* Dungeon background (roomBackground):
     - https://cutewallpaper.org/21/dungeon-background/Best-56-Dungeon-Background-on-HipWallpaper-Dungeon-Boss-.jpg
 * Dungeon floor:
     - https://images.creativemarket.com/0.1.0/ps/120087/910/607/m1/fpnw/wm0/stonefloor001_large-.jpg?1401477523&s=aeb8c8fbad2e06ac22344908c9ad2c9e

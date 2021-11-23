@@ -1,6 +1,14 @@
 from cmu_112_graphics import *
-# referenced from TA lecture: Graph Algorithm
-# generic graph object
+
+##############################################################################
+# GRAPH OBJECTS
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+
+##############################################################################
+
 class Graph(object):
     def __init__(self):
         self.table = dict() # dict storing the nodes and edges
@@ -25,16 +33,24 @@ class Graph(object):
     def getNeighbours(self, node):
         return set(self.table[node])
 
-# have yet to integrate the node as an object inside 
+# have yet to integrate the node as an object  
 class Node(object):
     def __init__(self, row, col):
         self.row = row
         self.col = col
 
-# dfs works, for pathfinding, 
-# but only finds one path, not the shortest path yet
-# referenced from TA lecture: Graph Algorithm
-def dfs(graph, startNode, targetNode):
+
+##############################################################################
+# DEPTH FIRST SEARCH
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+
+##############################################################################
+
+# main dfs function 
+def dfs(graph, startNode, targetNode): # does not find shortest path
     visited = set()
     solution = dict()
     solution = solve(startNode, targetNode, graph, visited, solution)
@@ -42,6 +58,7 @@ def dfs(graph, startNode, targetNode):
     print("sol:", solution)
     return solution # a list of coordinates
 
+# returns a list containing (row, col) positions of path
 def constructPath(solution, startNode, targetNode): 
     currNode = targetNode
     path = [currNode]
@@ -52,6 +69,7 @@ def constructPath(solution, startNode, targetNode):
         currNode = prevNode
     return path
 
+# recursive solve function
 def solve(startNode, targetNode, graph, visited, solution):
     if startNode == targetNode:
         return solution
@@ -59,19 +77,26 @@ def solve(startNode, targetNode, graph, visited, solution):
     for neighbour in graph.getNeighbours(startNode):
         if neighbour not in visited:
             solution[neighbour] = startNode
-            # solution.add(neighbour)
-            # print(startNode, neighbour, solution)
             tempsol = solve(neighbour, targetNode, graph, visited, solution)
             if tempsol != None: return tempsol
-            # solution.remove(neighbour)
             solution[neighbour] = None
     return None
 
 # dfs() # uncomment to test dfs
 
+
+##############################################################################
+# BREADTH FIRST SEARCH
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+# Queue documentation was also referenced: https://docs.python.org/3/library/queue.html
+
+##############################################################################
+
 from queue import *
 
-# referenced from TA lecture: Graph Algorithm
 def bfs(graph, startNode, targetNode):
     visited = set()
     solution = dict()
@@ -94,13 +119,21 @@ def bfs(graph, startNode, targetNode):
 
 # bfs() # uncomment to test dfs
 
+
+##############################################################################
+# PRIM'S ALGORITHM
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+# The following resources were also referenced:
+# - https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
+# - https://hurna.io/academy/algorithms/maze_generator/prim_s.html
+
+##############################################################################
+
 import random 
 
-# prim's algo for maze generation, works
-# can be used (within a room + whole map)
-# referenced from 
-# https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
-# and https://hurna.io/academy/algorithms/maze_generator/prim_s.html
 def prim(app):
     startNode = (0,0)
     cells = set() # set of cells
@@ -108,7 +141,7 @@ def prim(app):
     cells.add(startNode)
     graph = Graph()
     while len(cells) > 0:
-        # cell = cells.pop() # get a random cell
+        # get a random cell
         cell = random.choice(list(cells))
         cells.remove(cell)
         visited.add(cell) # mark cell as visited
@@ -121,7 +154,6 @@ def prim(app):
             # randomly connect the cell to a neighbour which has been visited
         cells = set.union(cells, unvisitedNeighbours) # add unvisited neighbour to the set
     # to create more paths, randomly add in some edges
-    # however, adding this will cause the dfs to not work
     # for i in range(100):
     #     cell = random.randint(0, app.rows), random.randint(0, app.cols)
     #     (drow, dcol) = random.choice(app.directions)
@@ -129,9 +161,8 @@ def prim(app):
     #     graph.addEdge(neighbour, cell)
     return graph
 
-# obtaining 4 cells connected to it 
+# obtaining the 4 cells around a cell
 def getNeighbours(app, rows, cols, row, col, visited):
-    # rows, cols = len(board), len(board[0])
     visitedNeighbours = set()
     unvisitedNeighbours = set()
     for dir in app.directions:
@@ -144,80 +175,3 @@ def getNeighbours(app, rows, cols, row, col, visited):
             else: 
                 visitedNeighbours.add( (newRow, newCol))
     return visitedNeighbours, unvisitedNeighbours
-
-
-#################################################
-# Test Code
-#################################################
-# def appStarted(app):
-#     app.margin = 0
-#     app.rows, app.cols = 20, 20
-#     app.cellHeight, app.cellWidth = app.height / app.rows, app.width / app.cols
-#     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-#     app.graph = prim(app)
-#     app.path = bfsNew(app.graph)
-#     # app.graph = Graph()
-#     # app.graph.addEdge((0,0), (0,1))
-#     # app.graph.addEdge((0,1), (1,1))
-
-
-# def drawCell(app, canvas, row, col, cellColor):
-#     x = app.margin + col * app.cellWidth
-#     y = app.margin + row * app.cellHeight
-#     canvas.create_oval(x, y, x + app.cellWidth, y + app.cellHeight,
-#                             fill=cellColor)
-
-# def redrawAll(app, canvas):
-#     drawGraph(app, canvas, app.graph)
-#     for (row, col) in app.path:
-#         drawCell(app, canvas, row, col, "red")
-
-# runApp(width=400, height=400)
-
-####################################################
-# Code that doesn't work
-####################################################
-
-from queue import PriorityQueue
-
-# referenced from TA lecture: Graph Algorithm
-def dijksrta():
-    allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
-    graph = Graph()
-    graph.addEdge((0,0), (0,1))
-    graph.addEdge((0,1), (1,1))
-    graph.addEdge((1,1), (1,2))
-    graph.addEdge((1,1), (2,1))
-    graph.addEdge((2,1), (2,2))
-    graph.addEdge((2,1), (2,0))
-    startNode = (0,0)
-    targetNode = (10,0)
-    visited = set()
-    distance = dict() 
-    solution = dict()
-    for node in allNodes:
-        distance[node] = 99999
-    distance[startNode] = 0
-    pq = PriorityQueue() # to be visited
-    pq.put(startNode, distance[startNode]) 
-    # how to ensure that priority queue sorts by second element
-    currNode = startNode
-    while currNode != targetNode:
-    # while not visited.empty():
-        currNode = pq.get()
-        for neighbour in graph.getNeighbours(currNode):
-            if neighbour not in visited:
-                edge = graph.getEdge(currNode, neighbour)
-                if distance[currNode] + edge < distance[neighbour]:
-                    distance[neighbour] = distance[currNode] + edge
-                    if neighbour in pq: 
-                        pq.pop(neighbour)
-                    pq.put(neighbour, distance[neighbour])
-                    solution[neighbour] = currNode
-                visited.add(neighbour)
-        pq.pop(currNode)
-    print("done")
-    #print(solution)
-
-# dijksrta()
-

@@ -4,17 +4,9 @@ from graph import *
 from objects import *
 from cmu_112_graphics import *
 
-# def appStarted(app):
-#     # "Up", "Right", "Down", "Left"
-#     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-#     app.rows, app.cols, app.cellSize, app.margin = 20, 20, 20, 0 
-#     app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-#     app.walls, app.wallsCoords = createWalls(app) 
-
+# returns graph based on wall positions, for path finding algorithm
 def createRoomGraph(app, wallsCoords):
-    # using wall positions to create a graph
     graph = Graph()
-    visited = set()
     for row in range(app.rows):
         for col in range(app.cols):
             cell = row, col
@@ -26,18 +18,8 @@ def createRoomGraph(app, wallsCoords):
                         graph.addEdge(cell, neighbour) 
     return graph
 
-
+# generates a walls in sets of 4 blocks
 def createWalls(app, board):
-    ## complete random generation of 1 wall block
-    # walls = set()
-    # wallsCoords = set()
-    # for _ in range(10):
-    #     wall = Wall(random.randint(0,19), random.randint(0, 19))
-    #     walls.add(wall)
-    #     wallsCoords.add((wall.row, wall.col))
-    # return walls, wallsCoords
-
-    ## group generation of wall
     wallCount = 50
     wallsCoords = set()
     walls = set()
@@ -53,30 +35,29 @@ def createWalls(app, board):
 
 # chooses a random row, col to place a wall
 def placeWall(app, row, col, board, wallsCoords):
-        wallSetSize = 4
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        wallSet, wallSetCoords = set(), set()
-        if checkCellEmpty(app, row, col, board, wallsCoords):
-            for _ in range(len(directions)):
-                dir = random.choice(directions)
-                wallList = checkEmptyFromDirection(app, row, col, 
-                            board, dir, wallSetSize, wallsCoords)
-                print(wallList)
-                if wallList != None:
-                    for (wallRow, wallCol) in wallList:
-                        wallSetCoords.add( (wallRow, wallCol) )
-                        wall = Wall(wallRow, wallCol)
-                        wallSet.add(wall)
-                    print("place", wallSet, wallSetCoords)
-                    return (wallSet, wallSetCoords)
-        return None
+    wallSetSize = 4
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    wallSet, wallSetCoords = set(), set()
+    if checkCellEmpty(app, row, col, board, wallsCoords):
+        for _ in range(len(directions)):
+            dir = random.choice(directions)
+            wallList = checkEmptyFromDirection(app, row, col, 
+                        board, dir, wallSetSize, wallsCoords)
+            print(wallList)
+            if wallList != None:
+                for (wallRow, wallCol) in wallList:
+                    wallSetCoords.add( (wallRow, wallCol) )
+                    wall = Wall(wallRow, wallCol)
+                    wallSet.add(wall)
+                print("place", wallSet, wallSetCoords)
+                return (wallSet, wallSetCoords)
+    return None
         
 # determines if there is sufficient space for a set of wall
 def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords):
     drow, dcol = dir 
     wallList = set()
     wallList.add( (row, col) )
-    # currently ensures that at both ends of the walls there's enough space, but not in all 4 dir
     for i in range(-1, wallSetSize+2):
         newRow = row + drow * i
         newCol = col + dcol * i
@@ -86,7 +67,7 @@ def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords)
         if i < wallSetSize: wallList.add( (newRow, newCol) )
     return wallList
 
-# need to improve this
+# check if chosen cell and cells in 4 directions surrounding it are empty
 def checkCellEmpty(app, row, col, board, wallsCoords):
     if (0 <= row < app.rows and # within bounds
         0 <= col < app.cols and (row, col) != (0,0)):
@@ -99,7 +80,7 @@ def checkCellEmpty(app, row, col, board, wallsCoords):
             return True
     return False
 
-
+# room object for generating multiple rooms in maze mode
 class Room(object):
     def __init__(self, app, roomNum, row, col, enemyCount):
         self.roomNum = roomNum
