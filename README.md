@@ -2,11 +2,14 @@
 
 <h2> Instructions </h2>
 
-* Use arrow keys to move the player
-* Press space bar to shoot bullets
-* Explore all rooms and kill all enemies before you can leave each room
-* Explore all rooms before you can get to the boss room
-* Defeat the boss to win the game
+* The player first starts off in a dungeon whereby there are several rooms to be explored
+* Navigate through the dungeon to get to doors, using arrow keys
+* Entering a room, the player would have to attack all the enemies in the room before a wall is generated and the player can return to the main dungeon
+* Press space bar for the player to shoot bullets at the enemy
+* There are special items such as health booster (red potion), time freezer (hourglass) and invisibility potion (blue potion)
+* Explore all rooms and kill all enemies before the boss room is generated
+* The boss would shoot bullets in the player's direction. The boss would also also produce lava which would move towards the direction of the player. Both bullets and lava would cause the player to lose some health.
+* Defeat the boss to win the game and escape the dungeon.
 
 <h2> Assets </h2>
 * Invisibility Potion (blue potion):
