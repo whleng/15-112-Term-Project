@@ -20,7 +20,7 @@
     - https://www.pngegg.com/en/png-cfgjc
 * Portal:
     - https://favpng.com/png_view/column-sprite-portal-video-game-film-png/Ed0S8uT5
-* Barrel, Big_worm, Chests, Cup, Ghost, Man_eater_flower:
+* Barrel, Big_worm, Chests, Cup, Ghost, Man_eater_flower, Lava:
     - https://lpc.opengameart.org/static/lpc-style-guide/assets.html#objects
 * Wall:
     - https://cdnb.artstation.com/p/assets/images/images/011/210/507/large/kim-shein-wall-sprite.jpg?1528384411

@@ -4,19 +4,6 @@ from graph import *
 from objects import *
 from cmu_112_graphics import *
 
-# returns graph based on wall positions, for path finding algorithm
-def createRoomGraph(app, wallsCoords):
-    graph = Graph()
-    for row in range(app.rows):
-        for col in range(app.cols):
-            cell = row, col
-            if cell not in wallsCoords: # if the cell is not a wall
-                _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
-                for neighbour in neighbours: 
-                    if neighbour not in wallsCoords: # if neighbour is not a wall
-                        # print("neighbour: ", neighbour)
-                        graph.addEdge(cell, neighbour) 
-    return graph
 
 # generates a walls in sets of 4 blocks
 def createWalls(app, board):
@@ -33,6 +20,10 @@ def createWalls(app, board):
             # print("here", walls)
     return walls, wallsCoords
 
+
+# Loosely referenced from word search: 
+# http://www.cs.cmu.edu/~112/notes/2d-list-case-studies.html
+     
 # chooses a random row, col to place a wall
 def placeWall(app, row, col, board, wallsCoords):
     wallSetSize = 4
@@ -52,7 +43,10 @@ def placeWall(app, row, col, board, wallsCoords):
                 # print("place", wallSet, wallSetCoords)
                 return (wallSet, wallSetCoords)
     return None
-        
+
+# Loosely referenced from word search: 
+# http://www.cs.cmu.edu/~112/notes/2d-list-case-studies.html
+     
 # determines if there is sufficient space for a set of wall
 def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords):
     drow, dcol = dir 

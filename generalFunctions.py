@@ -1,4 +1,5 @@
 import random
+from graph import *
 
 #########################################################
 # GENERAL FUNCTIONS
@@ -15,10 +16,15 @@ def getCellBounds(app, node):
     y1 = app.margin + (row+1) * app.cellHeight
     return (x0, y0, x1, y1)
 
+
+###################################################################
+# PLAYER CONTROL FUNCTIONS
+###################################################################
+
 # checks whether player's movement is legal
 def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=None):
     if app.mode == "bossMode":
-        return (0 <= playerRow < app.rows and 0 <= playerCol < app.cols)
+        return (playerRow, playerCol) in app.bossGraph.getNeighbours((prevPlayerRow, prevPlayerCol))
     elif app.mode == "mazeMode":
         return (playerRow, playerCol) in app.mazeGraph.getNeighbours((prevPlayerRow, prevPlayerCol))
     elif app.mode == "roomMode":
@@ -45,6 +51,35 @@ def playerControls(app, event, player):
             player.dir = (drow, dcol)
     elif event.key == "Space":
         player.attack()
+
+# returns graph based on wall positions, for path finding algorithm
+def createRoomGraph(app, wallsCoords):
+    graph = Graph()
+    for row in range(app.rows):
+        for col in range(app.cols):
+            cell = row, col
+            if cell not in wallsCoords: # if the cell is not a wall
+                _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
+                for neighbour in neighbours: 
+                    if neighbour not in wallsCoords: # if neighbour is not a wall
+                        # print("neighbour: ", neighbour)
+                        graph.addEdge(cell, neighbour) 
+    return graph
+
+
+###################################################################
+# SPRITE FUNCTIONS
+###################################################################
+
+# takes in the character and returns the current sprite to be used
+def getSpriteInFrame(app, character, sprites, spriteCounter):
+    # print("here", character.dir)
+    sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
+    x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
+    cx, cy = (x0+x1)//2, (y0+y1)//2
+    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    return sprite, cx, cy
+
 
 # Referenced from
 # http://www.cs.cmu.edu/~112/notes/notes-graphics.html#installingModules

@@ -1,5 +1,6 @@
 from graph import *
 from generalFunctions import *
+import time
 
 
 ################################################################
@@ -35,21 +36,22 @@ class Enemy(object):
         self.path = []
         self.spriteSheet = []
 
-    def followPlayer(self, playerRow, playerCol):
-        if self.row > playerRow: self.row -= 1
-        elif self.row < playerRow: self.row += 1
-        if self.col > playerCol: self.col -= 1
-        elif self.col < playerCol: self.col += 1
+    # # previous basic follow player code 
+    # def followPlayer(self, playerRow, playerCol):
+    #     if self.row > playerRow: self.row -= 1
+    #     elif self.row < playerRow: self.row += 1
+    #     if self.col > playerCol: self.col -= 1
+    #     elif self.col < playerCol: self.col += 1
 
-    def attackPlayer(self, playerRow, playerCol, app):
-        pass
-        # app.bullets.append
-    
     def checkCollision(self, target):
         if self.row == target.row and self.col == target.col:
             return True
 
  
+################################################################
+# Weapons / Attack Items
+################################################################
+
 class Bullet(object):
     def __init__(self, row, col, dir):
         self.row, self.col = row, col
@@ -58,16 +60,37 @@ class Bullet(object):
         self.spriteSheet = []
 
     def checkCollision(self, target):
-        loss = 10
+        loss = 10 #
         try:
             if self.row == target.row and self.col == target.col:
                 target.health -= loss
                 print(target.health)
-        except:
-            if self.row == target.y and self.col == target.x:
+        except: # boss
+            if (target.y - 1 < self.row < target.y + 1 and 
+                target.x - 1 < self.col < target.x + 1):
                 target.health -= loss
                 print(target.health)
         return target
+
+# lava will be generated from the boss, 
+# path path finds itself to player
+# lava disappears after 5s
+# player dies if it touches lava
+class Lava(object):
+    def __init__(self, row, col):
+        self.row, self.col = row, col
+        self.path = []
+        self.createdTime = time.time()
+        self.stepTime = time.time()
+    
+    def checkCollision(self, target, lavaList):
+        loss = 20 #
+        if self.row == target.row and self.col == target.col:
+            target.health -= loss
+            # print(target.health)
+            lavaList.remove(self)
+        return target
+
 
 ################################################################
 # Static Room Objects
@@ -103,6 +126,7 @@ class Door(object):
         if self.row == target.row and self.col == target.col:
             return True
 
+
 ################################################################
 # Collectable Room Objects
 ################################################################
@@ -128,13 +152,25 @@ class TimeFreezer(object):
         self.collected = False
 
     def checkCollision(self, target):
-        gain = 10
         if (self.row == target.row and self.col == target.col 
             and self.collected == False):
             self.collected = True
             return True
         return False
  
+
+class InvisibilityPotion(object):
+    def __init__(self, row, col):
+        self.row, self.col = row, col
+        self.collected = False
+
+    def checkCollision(self, target):
+        if (self.row == target.row and self.col == target.col 
+            and self.collected == False):
+            self.collected = True
+            return True
+        return False
+
 # combat items for boss fight
 class Item(object):
     def __init__(self, name, row, col):

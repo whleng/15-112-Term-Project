@@ -21,7 +21,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "mazeMode" 
+    app.mode = "splashscreenMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.winGame = None
 
@@ -32,6 +32,8 @@ def appStarted(app):
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
+        initMazeModeParams(app)
+        initRoomModeParams(app)
 
     elif app.mode == "mazeMode":
         initMazeModeParams(app)
@@ -41,6 +43,7 @@ def appStarted(app):
         initRoomModeParams(app)
 
     elif app.mode == "bossMode":
+        app.player = Player()
         initBossModeParams(app)
         
    
@@ -89,7 +92,7 @@ def splashscreenMode_redrawAll(app, canvas):
 
 
 #########################################################
-# GENERAL FUNCTIONS
+# GENERAL FUNCTIONS (mainly graphics)
 #########################################################
 
 def initGeneralParams(app):
@@ -152,6 +155,10 @@ def initSprites(app):
     app.bossSprites = createMovingSprites(app, app.bossSprite, 4, 3, range(4), 3)
     app.bossSpriteCounter = 0
 
+    app.barrelSprite = app.loadImage(r"Graphics/barrel.png")
+
+    app.lavaSprite = app.loadImage(r"Graphics/lava.png")
+
 
 def drawHealthBar(app, canvas, character, x0, y0, x1, y1):
     x2, y2, x3, y3 = x0 + app.cellWidth//10, y0 - app.cellWidth//10, x1 - app.cellWidth//10, y0 - app.cellWidth//10*3
@@ -177,15 +184,6 @@ def drawPlayer(app, canvas):
     
     # # draw basic player
     # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
-
-# takes in the character and returns the current sprite to be used
-def getSpriteInFrame(app, character, sprites, spriteCounter):
-    # print("here", character.dir)
-    sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
-    x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
-    cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    return sprite, cx, cy
 
 def drawEnemies(app, canvas):
     # draw sprite
@@ -494,9 +492,12 @@ def roomMode_redrawAll(app, canvas):
 
 def initBossModeParams(app):
     app.boss = Boss(10, 10)
-    app.player = Player()
+    app.player.row, app.player.col = (0,0)
     app.gameEvent = None
-    
+    createBossRoomObstacles(app)
+    app.bossGraph = createRoomGraph(app, app.barrelCoords)
+    app.bossRoomStartTime = time.time()
+
 # assigns the event to boss based on the user interaction
 def bossMode_keyPressed(app, event):
     # "Up", "Right", "Down", "Left"
@@ -533,6 +534,24 @@ def bossMode_timerFired(app):
         bullet.col += dcol
         bullet.checkCollision(app.player)
 
+    currTime = time.time()
+    # lava takes a step every interval of stepTime
+    print(app.boss.lavas)
+    for lava in app.boss.lavas:
+        if (currTime - lava.createdTime > 8):
+            app.boss.lavas.remove(lava)
+        elif (currTime - lava.createdTime > 5 or
+            lava.path == []):
+            lava.path = []
+            lava.checkCollision(app.player, app.boss.lavas)
+        else:
+            if (currTime - lava.stepTime > 0.3): 
+                prevRow, prevCol = lava.row, lava.col
+                lava.row, lava.col = lava.path.pop()
+                lava.dir = (lava.row - prevRow, lava.col - prevCol)
+                lava.checkCollision(app.player, app.boss.lavas)
+                lava.stepTime = time.time()
+
     # check if alive
     if app.boss.health < 0: app.winGame = True
     if app.player.health < 0: app.winGame = False
@@ -558,6 +577,13 @@ def drawBossRoomBullets(app, canvas):
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
+    for lava in app.boss.lavas:
+        sprite = app.lavaSprite
+        x0, y0, x1, y1 = getCellBounds(app, (lava.row, lava.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+
     # for bullet in app.player.bullets:
     #     drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
@@ -566,22 +592,37 @@ def drawBossRoomBullets(app, canvas):
 
 def drawBoss(app, canvas):
     # static image of boss right now
+    scale = 3 
     sprite = app.bossSprites["Down"][app.bossSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (app.boss.y, app.boss.x) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    sprite = sprite.resize( (int(x1-x0)*scale, int(y1-y0)*scale) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    x0, y0, x1, y1 = getCellBounds(app, (app.boss.y-1, app.boss.x) )
+
     drawHealthBar(app, canvas, app.boss, x0, y0, x1, y1)
     
     # drawCell(app, canvas, app.boss.y, app.boss.x, "green")
 
 
+def drawObstacles(app, canvas):
+    for barrelCoord in app.barrelCoords:
+        x0, y0, x1, y1 = getCellBounds(app, barrelCoord)
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        imageWidth, imageHeight = app.barrelSprite.size
+        scaleFactor =  (x1-x0) / imageWidth 
+        # print(scaleFactor)
+        barrelSprite = app.scaleImage(app.barrelSprite, scaleFactor)
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(barrelSprite))
+    
+
 def bossMode_redrawAll(app, canvas):
     print(app.gameEvent)
+    drawObstacles(app, canvas)
     # drawBoard(app, canvas)
     drawPlayer(app, canvas)
-    drawBoss(app, canvas)
     drawBossRoomBullets(app, canvas)
+    drawBoss(app, canvas)
 
 
 #######################################################
