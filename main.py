@@ -97,7 +97,7 @@ def splashscreenMode_redrawAll(app, canvas):
 
 def initGeneralParams(app):
     app.cx, app.cy = app.width//2, app.height//2
-    app.timerDelay = 100
+    app.timerDelay = 200
     
     app.startTime = time.time()
     app.bfsStartTime = time.time()
@@ -393,15 +393,22 @@ def roomMode_timerFired(app):
         app.currRoom.enemyStepTime = 3
 
     # enemy recalculates path every 3s
-    if currTime - app.bfsStartTime > 3:
-        for enemy in app.currRoom.roomEnemies:
-            targetRow, targetCol = app.player.row, app.player.col
-            if (app.currRoom.invisibilityPotion.collected and 
-                currTime - app.currRoom.invisibilityPotion.collectedTime < 10):
-                targetRow, targetCol = random.randint(0,app.rows-1), random.randint(0,app.cols-1)
+    for enemy in app.currRoom.roomEnemies:
+        targetRow, targetCol = app.player.row, app.player.col
+
+        if (app.currRoom.invisibilityPotion.collected and 
+            currTime - app.currRoom.invisibilityPotion.collectedTime < 15):
+            if app.currRoom.invisibilityPotion.used == False:
+                (row, col) = createObjectInRoom(app, app.currRoom.occupiedCoords)
+                app.tempPlayerRow, app.tempPlayerCol = (row, col)
+                print(row,col)
+                app.currRoom.invisibilityPotion.used = True
+            targetRow, targetCol = app.tempPlayerRow, app.tempPlayerCol
+
+        if currTime - app.bfsStartTime > 3:
             enemy.path = bfs(app.currRoom.roomGraph, (enemy.row, enemy.col),
                 (targetRow, targetCol) )
-        app.dfsStartTime = time.time()
+            app.dfsStartTime = time.time()
 
     # enemy takes a step every interval of stepTime
     if currTime - app.startTime > app.currRoom.enemyStepTime:
@@ -628,6 +635,13 @@ def drawBossRoomBullets(app, canvas):
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # default: travelling right
+        if bullet.dir == (1,0): # down
+            sprite = sprite.rotate(-90)
+        elif bullet.dir == (-1,0): # up
+            sprite = sprite.rotate(90)
+        elif bullet.dir == (0,-1): # left
+            sprite = sprite.rotate(180)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     
     for bullet in app.boss.bullets:
@@ -635,6 +649,13 @@ def drawBossRoomBullets(app, canvas):
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # default: travelling right
+        if bullet.dir == (1,0): # down
+            sprite = sprite.rotate(-90)
+        elif bullet.dir == (-1,0): # up
+            sprite = sprite.rotate(90)
+        elif bullet.dir == (0,-1): # left
+            sprite = sprite.rotate(180)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
     for lava in app.boss.lavas:
@@ -642,6 +663,13 @@ def drawBossRoomBullets(app, canvas):
         x0, y0, x1, y1 = getCellBounds(app, (lava.row, lava.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # default: travelling right
+        if bullet.dir == (1,0): # down
+            sprite = sprite.rotate(-90)
+        elif bullet.dir == (-1,0): # up
+            sprite = sprite.rotate(90)
+        elif bullet.dir == (0,-1): # left
+            sprite = sprite.rotate(180)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
     # for bullet in app.player.bullets:
@@ -677,6 +705,7 @@ def drawObstacles(app, canvas):
     
 
 def bossMode_redrawAll(app, canvas):
+    drawMazeBkgd(app, canvas)
     print(app.gameEvent)
     drawObstacles(app, canvas)
     # drawBoard(app, canvas)
