@@ -1,4 +1,4 @@
-
+import random
 
 #########################################################
 # GENERAL FUNCTIONS
@@ -27,7 +27,7 @@ def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=Non
     elif app.mode == "mazeMode":
         return (playerRow, playerCol) in app.mazeGraph.getNeighbours((prevPlayerRow, prevPlayerCol))
     elif app.mode == "roomMode":
-        return (playerRow, playerCol) in app.roomGraph.getNeighbours((prevPlayerRow, prevPlayerCol))
+        return (playerRow, playerCol) in app.currRoom.roomGraph.getNeighbours((prevPlayerRow, prevPlayerCol))
     # return False
 
 def convertDirections(app, dir):
@@ -87,16 +87,16 @@ def createObjectSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
                 sprites.append(sprite)
     return sprites
 
-def createObjectInRoom(app):
+def createObjectInRoom(app, occupiedCoords):
     row, col = None, None
     while True: 
-        if isLegalPlacement(app, row, col): break
+        if isLegalPlacement(app, row, col, occupiedCoords): break
         row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
     return row, col
     # should make it smartly generate not in a wall
 
-def isLegalPlacement(app, row, col):
+def isLegalPlacement(app, row, col, occupiedCoords):
     return (row != None and col != None and
            0 <= row < app.rows and
            0 <= col < app.cols and
-           (row, col) not in app.wallsCoords)
+           (row, col) not in occupiedCoords)

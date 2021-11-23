@@ -168,7 +168,7 @@ def drawEnemies(app, canvas):
     # draw sprite
     if app.mode == "roomMode":
 
-        for enemy in app.roomEnemies:
+        for enemy in app.currRoom.roomEnemies:
             sprite, cx, cy = getSpriteInFrame(app, enemy, 
                             app.enemySprites, app.enemySpriteCounter)
             canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
@@ -212,27 +212,6 @@ def initMazeModeParams(app):
     app.portalSpriteCounter = 0
     app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
     
-    # inint rooms
-    app.completedRooms = False
-
-    app.totalRooms = 2
-    app.rooms = []
-    app.currRoom = None
-    app.visitedRooms = set()
-
-    app.doorCoords = []
-    app.doors = []
-    
-    for i in range(app.totalRooms):
-        row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
-        while (row, col) in app.doorCoords:
-            row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
-        door = Door(row, col, i)
-        app.doors.append(door)
-        app.doorCoords.append( (row,col) )
-        enemyCount = 2*i
-        room = Room(app, i, row, col, enemyCount)
-        app.rooms.append(room)
 
 
 def mazeMode_timerFired(app):
@@ -248,10 +227,11 @@ def mazeMode_timerFired(app):
 
     else:
         for door in app.doors:
-            if app.door.checkCollision(player):
+            if door.checkCollision(player):
                 print("Going to a room...")
                 app.mode = "roomMode"
-                app.currRoom = door.roomNum
+                app.currRoomNum = door.roomNum
+                app.currRoom = app.rooms[app.currRoomNum]
                 app.player.row, app.player.col = (0,0)
         
     
@@ -325,6 +305,7 @@ def mazeMode_redrawAll(app, canvas):
 
 def initRoomModeParams(app):
     app.player = Player()
+    app.enemyStepTime = 0.3
 
     # init graphics
     app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
@@ -332,9 +313,29 @@ def initRoomModeParams(app):
     app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
     app.enemySpriteCounter = 0
     app.healthBoosterSprite = app.loadImage(r"Graphics/healthBooster.png")
-    app.board = [ ["white"] *  app.cols for i in range(app.rows)]
+
+    # init all rooms
+    app.completedRooms = False
+
+    app.totalRooms = 2
+    app.rooms = []
+    app.currRoom = None
+    app.currRoomNum = None
+    app.visitedRooms = set()
+
+    app.doorCoords = []
+    app.doors = []
     
-    
+    for i in range(app.totalRooms):
+        row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
+        while (row, col) in app.doorCoords:
+            row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
+        door = Door(row, col, i)
+        app.doors.append(door)
+        app.doorCoords.append( (row,col) )
+        enemyCount = 1
+        room = Room(app, i, row, col, enemyCount)
+        app.rooms.append(room)
 
     # The following inits have been done within each instance of room
     # # app.roomItems = []
@@ -352,7 +353,6 @@ def initRoomModeParams(app):
     #     enemy.path = bfs(app.roomGraph, (enemy.row, enemy.col),
     #         (app.player.row, app.player.col) )
 
-    # app.enemyStepTime = 0.3
     # row, col = createObjectInRoom(app)
     # app.healthBooster = HealthBooster(row, col)
     # row, col = createObjectInRoom(app)
@@ -375,7 +375,7 @@ def roomMode_timerFired(app):
     # enemy recalculates path every 5s
     if currTime - app.bfsStartTime > 5:
         for enemy in app.currRoom.roomEnemies:
-            enemy.path = bfs(app.roomGraph, (enemy.row, enemy.col),
+            enemy.path = bfs(app.currRoom.roomGraph, (enemy.row, enemy.col),
                 (app.player.row, app.player.col) )
         app.dfsStartTime = time.time()
 
@@ -411,7 +411,7 @@ def roomMode_timerFired(app):
                 app.currRoom.roomEnemies.remove(enemy)
 
     # check if player has killed all enemies
-    if app.roomEnemies == []:
+    if app.currRoom.roomEnemies == []:
         if app.currRoom.door.checkCollision(app.player):
             print("Congrats! Going back to maze...")
             app.mode = "mazeMode"
@@ -439,7 +439,7 @@ def drawBoard(app, canvas):
                 drawCell(app, canvas, row, col, cellColor) 
 
 def drawRoomWalls(app, canvas):
-    for wallCoord in app.wallsCoords:
+    for wallCoord in app.currRoom.wallsCoords:
         ## draw walls using sprite, need to loop through wall in wall coords
         x0, y0, x1, y1 = getCellBounds(app, wallCoord)
         cx, cy = (x0+x1)//2, (y0+y1)//2
@@ -473,7 +473,7 @@ def drawDoor(app, canvas, doorNum=None):
 def drawHealthBooster(app, canvas):
     if not app.currRoom.healthBooster.collected:
         sprite = app.healthBoosterSprite
-        x0, y0, x1, y1 = getCellBounds(app, (app.healthBooster.row, app.healthBooster.col) )
+        x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.healthBooster.row, app.currRoom.healthBooster.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
@@ -481,7 +481,7 @@ def drawHealthBooster(app, canvas):
 def drawTimeFreezer(app, canvas):
     if not app.currRoom.timeFreezer.collected:
         sprite = app.timeFreezerSprite
-        x0, y0, x1, y1 = getCellBounds(app, (app.timeFreezer.row, app.timeFreezer.col) )
+        x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.timeFreezer.row, app.currRoom.timeFreezer.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
@@ -495,7 +495,7 @@ def roomMode_redrawAll(app, canvas):
     drawHealthBooster(app, canvas)
     drawTimeFreezer(app, canvas)
 
-    if app.roomEnemies == []: drawDoor(app, canvas, app.currRoom)
+    if app.currRoom.roomEnemies == []: drawDoor(app, canvas, app.currRoomNum)
 
 
 #########################################################

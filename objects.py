@@ -1,7 +1,5 @@
-from room import *
 from graph import *
 from generalFunctions import *
-from cmu_112_graphics import *
 
 
 class Sprite(object):
@@ -79,7 +77,7 @@ class Enemy(object):
         # app.bullets.append
     
     def checkCollision(self, target):
-        if self.row == target.row and self.col == target.col and self.collected == False:
+        if self.row == target.row and self.col == target.col:
             return True
 
 class Wall(object):
@@ -106,17 +104,17 @@ class Portal(object):
         self.row, self.col = row, col
     
     def checkCollision(self, target):
-        if self.row == target.row and self.col == target.col and self.collected == False:
+        if self.row == target.row and self.col == target.col:
             return True
 
 class Door(object):
-    def __init__(self, row, col, doorNum):
+    def __init__(self, row, col, roomNum):
         self.row, self.col = row, col
-        self.room = doorNum
+        self.roomNum = roomNum
         self.spriteSheet = []
 
     def checkCollision(self, target):
-        if self.row == target.row and self.col == target.col and self.collected == False:
+        if self.row == target.row and self.col == target.col:
             return True
 
 class HealthBooster(object):
@@ -144,26 +142,3 @@ class TimeFreezer(object):
             return True
         return False
  
-class Room(object):
-    def __init__(self, app, roomNum, row, col, enemyCount):
-        self.roomNum = roomNum
-        self.row, self.col = row, col # position in maze
-
-        self.walls, self.wallsCoords = createWalls(app)
-        self.roomGraph = createRoomGraph(app)
-
-        self.roomEnemies = []
-        for i in range(enemyCount):
-            row, col = createObjectInRoom(app)
-        self.roomEnemies.append(Enemy(row, col))
-        for enemy in self.roomEnemies:
-            enemy.path = bfs(self.roomGraph, (enemy.row, enemy.col),
-                (app.player.row, app.player.col) )
-
-        row, col = createObjectInRoom(app)
-        self.healthBooster = HealthBooster(row, col)
-        row, col = createObjectInRoom(app)
-        self.timeFreezer = TimeFreezer(row, col)
-
-        row, col = createObjectInRoom(app)
-        self.door = Door(row, col) # to escape back 
