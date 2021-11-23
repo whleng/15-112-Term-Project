@@ -2,7 +2,16 @@
 
 This is my 15-112 Term Project
 
+Instructions
+* Use arrow keys to move the player
+* Press space bar to shoot bullets
+* Explore all rooms and kill all enemies before you can leave each room
+* Explore all rooms before you can get to the boss room
+* Defeat the boss to win the game
+
 Graphics
+* Hourglass:
+- https://www.flaticon.com/free-icon/hourglass_3208746
 * HealthBooster:
 - https://www.gamedevmarket.net/asset/voxel-health-potion/
 * Win game background

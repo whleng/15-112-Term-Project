@@ -111,3 +111,16 @@ class HealthBooster(object):
             self.collected = True
             print("HEALTH!")
         return target
+
+class TimeFreezer(object):
+    def __init__(self, row, col):
+        self.row, self.col = row, col
+        self.collected = False
+
+    def checkCollision(self, target):
+        gain = 10
+        if self.row == target.row and self.col == target.col and self.collected == False:
+            self.collected = True
+            return True
+        return False
+ 

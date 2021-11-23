@@ -23,7 +23,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "bossMode" 
+    app.mode = "roomMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
@@ -57,7 +57,7 @@ def appStarted(app):
     app.oneBulletSprite = app.loadImage(r"Graphics/oneBullet.png")
     app.doorSprite =  app.loadImage(r"Graphics/door.png")
     app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
-
+    app.timeFreezerSprite = app.loadImage(r"Graphics/hourglass.png")
 
     if app.mode == "mazeMode":
         initMazeModeParams(app)
@@ -429,10 +429,15 @@ def initRoomModeParams(app):
     app.enemyStepTime = 0.3
     row, col = createObjectInRoom(app)
     app.healthBooster = HealthBooster(row, col)
+    row, col = createObjectInRoom(app)
+    app.timeFreezer = TimeFreezer(row, col)
 
 def roomMode_timerFired(app):
     currTime = time.time()
-    app.portalSpriteCounter = (1 + app.portalSpriteCounter) % len(app.portalSprites)
+    # app.portalSpriteCounter = (1 + app.portalSpriteCounter) % len(app.portalSprites)
+    if app.timeFreezer.collected:
+        if currTime - app.startFreezeTime > 10:
+            app.enemyStepTime = 0.3
     if currTime - app.bfsStartTime > 5:
         for enemy in app.roomEnemies:
             enemy.path = bfs(app.roomGraph, (enemy.row, enemy.col),
@@ -454,7 +459,7 @@ def roomMode_timerFired(app):
             app.player.health -= 10
             if app.player.health < 0: 
                 print("GAME OVER!")
-                app.mode = "gameOverMode"
+                app.mode = "loseMode"
     for bullet in app.player.bullets:
         print("bullet:", bullet)
         drow, dcol = bullet.dir
@@ -471,6 +476,11 @@ def roomMode_timerFired(app):
             app.mode = "mazeMode"
             app.completedRooms = True
     app.healthBooster.checkCollision(app.player)
+    if app.timeFreezer.checkCollision(app.player): 
+        app.startFreezeTime = time.time()
+        app.enemyStepTime = 3
+
+
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
@@ -534,14 +544,23 @@ def drawHealthBooster(app, canvas):
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
+def drawTimeFreezer(app, canvas):
+    if not app.timeFreezer.collected:
+        sprite = app.timeFreezerSprite
+        x0, y0, x1, y1 = getCellBounds(app, (app.timeFreezer.row, app.timeFreezer.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
 def roomMode_redrawAll(app, canvas):
-    drawBoard(app, canvas)
+    # drawBoard(app, canvas)
     drawRoomWalls(app, canvas)
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
     drawBullets(app, canvas)
     drawHealthBooster(app, canvas)
+    drawTimeFreezer(app, canvas)
+
     if app.roomEnemies == []: drawDoor(app, canvas)
 
 

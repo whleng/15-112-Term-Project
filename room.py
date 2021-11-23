@@ -37,7 +37,7 @@ def createWalls(app):
     # return walls, wallsCoords
 
     ## group generation of wall
-    wallCount = 30
+    wallCount = 50
     wallsCoords = set()
     walls = set()
     while len(wallsCoords) < wallCount:
@@ -90,5 +90,10 @@ def checkCellEmpty(app, row, col, board, wallsCoords):
     if (0 <= row < app.rows and # within bounds
         0 <= col < app.cols):
         if (row, col not in wallsCoords): # not a wall
+            # no walls in 4 directions around it 
+            for (drow, dcol) in app.directions:
+                newRow, newCol = row+drow, col+dcol
+                if (newRow, newCol) in wallsCoords:
+                    return False
             return True
     return False
