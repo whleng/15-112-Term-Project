@@ -5,13 +5,13 @@ class Sprite(object):
 #        self.imageWidth, self.imageHeight = spriteSheet.size()
 
 class Player(object):
-    def __init__(self):
+    def __init__(self, health=100, items=dict()):
         self.row, self.col = 0, 0
         self.color = "blue"
-        self.health = 100
+        self.health = health
         self.speed = 10 
         self.xp = 10
-        self.items = dict()
+        self.items = items
         self.bullets = []
         self.dir = (0,1)
 
@@ -90,6 +90,10 @@ class Door(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
 
+    def checkCollision(self, target):
+        if self.row == target.row and self.col == target.col and self.collected == False:
+            return True
+            
 class HealthBooster(object):
     def __init__(self, row, col):
         self.row, self.col = row, col

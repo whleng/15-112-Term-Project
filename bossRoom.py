@@ -90,13 +90,6 @@ def attack(app):
         app.boss.bullets.append( bullet )
         app.startTime = time.time()
 
-def bossRoomInit(app):
-    app.boss = Boss(10, 10)
-    app.player = Player()
-    app.gameEvent = None
-    app.cols, app.rows, app.margin, app.cellSize = 20, 20, 0, 20
-    app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-
 # def appStarted(app):
 #     bossRoomInit(app)
 
