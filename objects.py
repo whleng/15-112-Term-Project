@@ -89,3 +89,16 @@ class Portal(object):
 class Door(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
+
+class HealthBooster(object):
+    def __init__(self, row, col):
+        self.row, self.col = row, col
+        self.collected = False
+
+    def checkCollision(self, target):
+        gain = 10
+        if self.row == target.row and self.col == target.col and self.collected == False:
+            target.health += gain
+            self.collected = True
+            print("HEALTH!")
+        return target

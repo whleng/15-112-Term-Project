@@ -23,14 +23,16 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "mazeMode" 
+    app.mode = "roomMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
-  
+    
+    app.winGame = None
+    
     app.startTime = time.time()
     app.bfsStartTime = time.time()
     app.arrowKeys = ["Up", "Right", "Down", "Left"]
@@ -53,7 +55,8 @@ def appStarted(app):
     app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
     app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
     app.doorSprite =  app.loadImage(r"Graphics/door.png")
-    
+    app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
+
     # mazeMode    
     if app.mode == "mazeMode":
         app.enemy = Enemy(5,5)
@@ -74,7 +77,8 @@ def appStarted(app):
         app.portalSprite = app.loadImage(r"Graphics/portal.png")
         app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
         app.portalSpriteCounter = 0
-        
+        app.healthBoosterSprite = app.loadImage(r"Graphics/healthBooster.png")
+
         app.board = [ ["white"] *  app.cols for i in range(app.rows)]
 
         app.roomItems = []
@@ -91,7 +95,8 @@ def appStarted(app):
         for enemy in app.roomEnemies:
             enemy.path = bfs(app.graph, (enemy.row, enemy.col),
                 (app.player.row, app.player.col) )
-
+        row, col = createObjectInRoom(app)
+        app.healthBooster = HealthBooster(row, col)
 
     elif app.mode == "bossMode":
         bossRoomInit(app)
@@ -327,6 +332,13 @@ def mazeMode_timerFired(app):
         if ((app.player.row, app.player.col) == (app.portal.row, app.portal.col)):
             print("Going to boss room...")
             app.mode = "bossMode"
+
+    if app.boss.health < 0: app.winGame = True
+    if app.player.health < 0: app.winGame = False
+
+    if app.winGame != None:
+        if app.winGame: app.mode = "winMode"
+        else: app.mode = "loseMode"
     
 def mazeMode_keyPressed(app, event):
     playerControls(app, event)
@@ -436,6 +448,7 @@ def roomMode_timerFired(app):
             print("Congrats! Going back to maze...")
             app.mode = "mazeMode"
             app.completedRooms = True
+    app.healthBooster.checkCollision(app.player)
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
@@ -466,7 +479,7 @@ def drawRoomWalls(app, canvas):
         cx, cy = (x0+x1)//2, (y0+y1)//2
         imageWidth, imageHeight = app.wallSprite.size
         scaleFactor =  (x1-x0) / imageWidth 
-        print(scaleFactor)
+        # print(scaleFactor)
         wallSprite = app.scaleImage(app.wallSprite, scaleFactor)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(wallSprite))
 
@@ -490,6 +503,14 @@ def drawDoor(app, canvas):
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
+def drawHealthBooster(app, canvas):
+    if not app.healthBooster.collected:
+        sprite = app.healthBoosterSprite
+        x0, y0, x1, y1 = getCellBounds(app, (app.healthBooster.row, app.healthBooster.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+
 
 def roomMode_redrawAll(app, canvas):
     drawBoard(app, canvas)
@@ -497,13 +518,13 @@ def roomMode_redrawAll(app, canvas):
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
     drawBullets(app, canvas)
+    drawHealthBooster(app, canvas)
     if app.roomEnemies == []: drawDoor(app, canvas)
 
 
 #########################################################
 # BOSS MODE
 #########################################################
-
 
 
 def bossMode_keyPressed(app, event):
@@ -591,9 +612,9 @@ def bossMode_redrawAll(app, canvas):
 #######################################################
 
 def winMode_redrawAll(app, canvas):
-    pass
+    canvas.create_text(app.width//2, app.height//2, text="You win")
 
 def loseMode_redrawAll(app, canvas):
-    pass
+    canvas.create_text(app.width//2, app.height//2, text="You lose")
 
 runApp(width=WIDTH, height=HEIGHT)
