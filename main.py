@@ -334,7 +334,7 @@ def initRoomModeParams(app):
         door = Door(row, col, i)
         app.doors.append(door)
         app.doorCoords.append( (row,col) )
-        enemyCount = 1
+        enemyCount = i + 1
         room = Room(app, i, row, col, enemyCount)
         app.rooms.append(room)
 
@@ -406,6 +406,9 @@ def roomMode_timerFired(app):
         bullet.row += drow
         bullet.col += dcol 
         bullet.spriteCounter = (1 + bullet.spriteCounter) % len(app.bulletSprites)
+        if (bullet.row < 0 or bullet.row >= app.rows or
+            bullet.col < 0 or bullet.col >= app.cols):
+            app.player.bullets.remove(bullet) 
         for enemy in app.currRoom.roomEnemies:
             enemy = bullet.checkCollision(enemy)
             if enemy.health < 0: 
