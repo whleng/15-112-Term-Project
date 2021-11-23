@@ -41,9 +41,14 @@ class Bullet(object):
 
     def checkCollision(self, target):
         loss = 10
-        if self.row == target.row and self.col == target.col:
-            target.health -= loss
-            print(target.health)
+        try:
+            if self.row == target.row and self.col == target.col:
+                target.health -= loss
+                print(target.health)
+        except:
+            if self.row == target.y and self.col == target.x:
+                target.health -= loss
+                print(target.health)
         return target
 
 class Enemy(object):
@@ -93,7 +98,7 @@ class Door(object):
     def checkCollision(self, target):
         if self.row == target.row and self.col == target.col and self.collected == False:
             return True
-            
+
 class HealthBooster(object):
     def __init__(self, row, col):
         self.row, self.col = row, col

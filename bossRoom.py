@@ -67,8 +67,16 @@ def defend(app):
             stepDir = random.choice([1,-1])
             if bullet.dir[0] != 0: # (1,0) or (-1,0) horizontal movement
                 app.boss.x += step * stepDir
+                if app.boss.x < 0:
+                    app.boss.x = 0 
+                elif app.boss.x >= app.cols:
+                    app.boss.x = app.cols - 1
             elif bullet.dir[1] != 0: # (0,1) or (0,-1) vertical movement
                 app.boss.y += step * stepDir 
+                if app.boss.y < 0:
+                    app.boss.y = 0 
+                elif app.boss.y >= app.rows:
+                    app.boss.y = app.rows - 1
             return
     
 def isInRange(app, bullet, boss):

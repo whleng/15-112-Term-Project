@@ -23,7 +23,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "loseMode" 
+    app.mode = "bossMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.cx, app.cy = app.width//2, app.height//2
     app.timerDelay = 10
@@ -46,8 +46,6 @@ def appStarted(app):
     # app.cellWidth = app.gridWidth / app.cols
     # app.cellHeight = app.gridHeight / app.rows
 
-    app.player = Player()
-    app.mazePlayer = Player()
 
     app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
     app.playerSprites = createMovingSprites(app, app.playerSpriteSheet, 
@@ -163,18 +161,18 @@ def convertDirections(app, dir):
     elif dir in app.arrowKeys: # in arrow key form
         return app.directions[app.arrowKeys.index(dir)]
 
-def playerControls(app, event):
-    app.playerSpriteCounter = (1 + app.playerSpriteCounter) % len(app.playerSprites[convertDirections(app, app.player.dir)])
+def playerControls(app, event, player):
+    app.playerSpriteCounter = (1 + app.playerSpriteCounter) % len(app.playerSprites[convertDirections(app, player.dir)])
     if event.key in app.arrowKeys:
         drow, dcol = convertDirections(app, event.key)
-        playerRow = app.player.row + drow
-        playerCol = app.player.col + dcol
-        if isLegalMove(app, playerRow, playerCol, app.player.row, app.player.col):
-            app.player.row = playerRow
-            app.player.col = playerCol
-            app.player.dir = (drow, dcol)
+        playerRow = player.row + drow
+        playerCol = player.col + dcol
+        if isLegalMove(app, playerRow, playerCol, player.row, player.col):
+            player.row = playerRow
+            player.col = playerCol
+            player.dir = (drow, dcol)
     elif event.key == "Space":
-        app.player.attack()
+        player.attack()
 
 
 # cited from 
@@ -237,14 +235,19 @@ def drawHealthBar(app, canvas, character, x0, y0, x1, y1):
     
 def drawPlayer(app, canvas):
     # draw player sprite
-    sprite = app.playerSprites[convertDirections(app, app.player.dir)][app.playerSpriteCounter]
-    x0, y0, x1, y1 = getCellBounds(app, (app.player.row, app.player.col) )
+    if app.mode == "mazeMode":
+        player = app.mazePlayer
+    else: 
+        player = app.player
+    sprite = app.playerSprites[convertDirections(app, player.dir)][app.playerSpriteCounter]
+    x0, y0, x1, y1 = getCellBounds(app, (player.row, player.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
     
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     # health bar
-    drawHealthBar(app, canvas, app.player, x0, y0, x1, y1)
+    if app.mode != "mazeMode":
+        drawHealthBar(app, canvas, app.player, x0, y0, x1, y1)
     
     # # draw basic player
     # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
@@ -291,20 +294,21 @@ def drawCell(app, canvas, row, col, cellColor):
 
 def initMazeModeParams(app):
     # app.enemy = Enemy(5,5)
-        app.mazeGraph = prim(app)
-        # app.path = bfs(app.graph, 
-        #             (app.enemy.row, app.enemy.col),
-        #             (app.player.row, app.player.col))
-        app.door = Door(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
-        app.portalSprite = app.loadImage(r"Graphics/portal.png")
-        app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
-        app.portalSpriteCounter = 0
-        app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
-        app.completedRooms = False
+    app.mazePlayer = Player()
+    app.mazeGraph = prim(app)
+    # app.path = bfs(app.graph, 
+    #             (app.enemy.row, app.enemy.col),
+    #             (app.player.row, app.player.col))
+    app.door = Door(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
+    app.portalSprite = app.loadImage(r"Graphics/portal.png")
+    app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
+    app.portalSpriteCounter = 0
+    app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
+    app.completedRooms = False
 
 def mazeMode_timerFired(app):
     currTime = time.time()
-    player = app.player.row, app.player.col
+    player = app.mazePlayer
     # enemy = app.enemy.row, app.enemy.col
     # if currTime - app.startTime > 1:
     #     app.path = bfs(app.graph, enemy, player)
@@ -316,19 +320,19 @@ def mazeMode_timerFired(app):
     #     #    enemy.followPlayer(app.player.row, app.player.col)
     #     app.startTime = time.time()
 
-    if ((app.player.row, app.player.col) == (app.door.row, app.door.col)):
+    if ((player.row, player.col) == (app.door.row, app.door.col)):
         if not app.completedRooms:
             print("Going to a room...")
             app.mode = "roomMode"
         
     if app.completedRooms:
-        if ((app.player.row, app.player.col) == (app.portal.row, app.portal.col)):
+        if ((player.row, player.col) == (app.portal.row, app.portal.col)):
             print("Going to boss room...")
             app.mode = "bossMode"
             initBossModeParams(app)
     
 def mazeMode_keyPressed(app, event):
-    playerControls(app, event)
+    playerControls(app, event, app.mazePlayer)
 
 # draw graph works
 def drawGraph(app, canvas, graph):
@@ -396,6 +400,8 @@ def mazeMode_redrawAll(app, canvas):
 #########################################################
 
 def initRoomModeParams(app):
+    app.player = Player()
+
     app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
     app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
     app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
@@ -468,7 +474,7 @@ def roomMode_timerFired(app):
 
 # should add some stuff 
 def roomMode_keyPressed(app, event):
-    playerControls(app, event)
+    playerControls(app, event, app.player)
 
 #####################################################
 # Drawing Functions
