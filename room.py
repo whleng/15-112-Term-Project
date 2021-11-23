@@ -88,7 +88,7 @@ def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords)
 # need to improve this
 def checkCellEmpty(app, row, col, board, wallsCoords):
     if (0 <= row < app.rows and # within bounds
-        0 <= col < app.cols):
+        0 <= col < app.cols and (row, col) != (app.player.row, app.player.col)):
         if (row, col not in wallsCoords): # not a wall
             # no walls in 4 directions around it 
             for (drow, dcol) in app.directions:

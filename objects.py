@@ -1,3 +1,9 @@
+from room import *
+from graph import *
+from generalFunctions import *
+from cmu_112_graphics import *
+
+
 class Sprite(object):
     def __init__(self, character, spriteSheet):
         self.character = character # e.g. app.player
@@ -14,6 +20,7 @@ class Player(object):
         self.items = items
         self.bullets = []
         self.dir = (0,1)
+        self.spriteSheet = []
 
     def jump(self):
         # skip one box when moving in a particular direction
@@ -38,6 +45,7 @@ class Bullet(object):
         self.row, self.col = row, col
         self.dir = dir
         self.spriteCounter = 0
+        self.spriteSheet = []
 
     def checkCollision(self, target):
         loss = 10
@@ -58,6 +66,7 @@ class Enemy(object):
         self.health = 100
         self.color = "red"
         self.path = []
+        self.spriteSheet = []
 
     def followPlayer(self, playerRow, playerCol):
         if self.row > playerRow: self.row -= 1
@@ -68,11 +77,16 @@ class Enemy(object):
     def attackPlayer(self, playerRow, playerCol, app):
         pass
         # app.bullets.append
+    
+    def checkCollision(self, target):
+        if self.row == target.row and self.col == target.col and self.collected == False:
+            return True
 
 class Wall(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
         self.color = "brown"
+        self.spriteSheet = []
 
     def __hash__(self):
         return hash( (self.row, self.col) )
@@ -91,9 +105,15 @@ class Portal(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
     
+    def checkCollision(self, target):
+        if self.row == target.row and self.col == target.col and self.collected == False:
+            return True
+
 class Door(object):
-    def __init__(self, row, col):
+    def __init__(self, row, col, doorNum):
         self.row, self.col = row, col
+        self.room = doorNum
+        self.spriteSheet = []
 
     def checkCollision(self, target):
         if self.row == target.row and self.col == target.col and self.collected == False:
@@ -124,3 +144,26 @@ class TimeFreezer(object):
             return True
         return False
  
+class Room(object):
+    def __init__(self, app, roomNum, row, col, enemyCount):
+        self.roomNum = roomNum
+        self.row, self.col = row, col # position in maze
+
+        self.walls, self.wallsCoords = createWalls(app)
+        self.roomGraph = createRoomGraph(app)
+
+        self.roomEnemies = []
+        for i in range(enemyCount):
+            row, col = createObjectInRoom(app)
+        self.roomEnemies.append(Enemy(row, col))
+        for enemy in self.roomEnemies:
+            enemy.path = bfs(self.roomGraph, (enemy.row, enemy.col),
+                (app.player.row, app.player.col) )
+
+        row, col = createObjectInRoom(app)
+        self.healthBooster = HealthBooster(row, col)
+        row, col = createObjectInRoom(app)
+        self.timeFreezer = TimeFreezer(row, col)
+
+        row, col = createObjectInRoom(app)
+        self.door = Door(row, col) # to escape back 
