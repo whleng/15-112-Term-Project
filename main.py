@@ -54,6 +54,8 @@ def appStarted(app):
     app.playerSpriteCounter = 0
     app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
     app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
+    app.bulletSprites = app.bulletSprites[9:] # temporary fix  
+    app.oneBulletSprite = app.loadImage(r"Graphics/oneBullet.png")
     app.doorSprite =  app.loadImage(r"Graphics/door.png")
     app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
 
@@ -488,10 +490,11 @@ def drawRoomWalls(app, canvas):
 
 def drawBullets(app, canvas):
     for bullet in app.player.bullets:
-        sprite = app.bulletSprites[bullet.spriteCounter]
+        # sprite = app.bulletSprites[bullet.spriteCounter]
+        sprite = app.oneBulletSprite
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
     # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
