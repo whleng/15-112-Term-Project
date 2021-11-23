@@ -12,7 +12,7 @@ WIDTH = 640
 HEIGHT = 640
 
 def gameDimensions():
-    rows, cols, margin = 15, 15, 20 # 38, 65, 20, 0 
+    rows, cols, margin = 15, 15, 20  
     # game dimensions can be changed here
     return (rows, cols, margin)
 
@@ -68,7 +68,7 @@ def createButtons(app):
     cx, cy = app.cx, app.cy * 2/3
     width, height = app.width/5, app.height/15
     app.startButton = cx-width, cy-height, cx+width, cy+height
-    
+
 def drawButtons(app, canvas):
     # start button, help button
 
@@ -97,7 +97,7 @@ def splashscreenMode_redrawAll(app, canvas):
 
 def initGeneralParams(app):
     app.cx, app.cy = app.width//2, app.height//2
-    app.timerDelay = 10
+    app.timerDelay = 100
     
     app.startTime = time.time()
     app.bfsStartTime = time.time()
@@ -123,6 +123,23 @@ def initBackgrounds(app):
     imagecx, imagecy = imageWidth//2, imageHeight//2
     cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
     app.winModeImage =  bkgd.crop(cropCoords)
+
+    app.mazeBkgd = createBackground(app, app.loadImage(r"Graphics/dungeon floor.jpg"))
+    app.roomBkgd = createBackground(app, app.loadImage(r"Graphics/roomBackground.jpg"))
+
+def createBackground(app, image):
+    imageWidth, imageHeight = image.size
+    imagecx, imagecy = imageWidth//2, imageHeight//2
+    if imageWidth/imageHeight < app.width/app.height: 
+        # crop to width
+        image = image.resize( (int(app.width), int(app.width/imageWidth * imageHeight)) )
+    else:        
+        # crop to height
+        image = image.resize( ( int(app.height/imageHeight * imageWidth), int(app.height)) )
+    imageWidth, imageHeight = image.size
+    imagecx, imagecy = imageWidth//2, imageHeight//2
+    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy    
+    return image.crop(cropCoords)
 
 def initSprites(app):
     app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
@@ -158,6 +175,7 @@ def initSprites(app):
     app.barrelSprite = app.loadImage(r"Graphics/barrel.png")
 
     app.lavaSprite = app.loadImage(r"Graphics/lava.png")
+    app.invisibilityPotionSprite = app.loadImage(r"Graphics/invisibility.png")
 
 
 def drawHealthBar(app, canvas, character, x0, y0, x1, y1):
@@ -226,6 +244,14 @@ def initMazeModeParams(app):
     # init portal
     app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
     
+# create collectable items in maze mode
+# def createItemsInMaze(app):
+#     totalItems = 3
+#     app.mazeItems = []
+#     for i in range(totalItems):
+#         row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1))
+#         item = HealthBooster(row, col)
+#         app.mazeItem.append(item)
 
 def mazeMode_timerFired(app):
     player = app.mazePlayer
@@ -290,7 +316,7 @@ def drawMazeWall(app, canvas, node, neighbour):
         else:  # neighbour at bottom
             x0, y0, x1, y1 = getCellBounds(app, neighbour)
         line = x0, y0, x0 + app.cellWidth, y0
-    canvas.create_line(line)
+    canvas.create_line(line, width=2)
 
 def drawPortal(app, canvas):
     sprite = app.portalSprites[app.portalSpriteCounter]
@@ -300,7 +326,11 @@ def drawPortal(app, canvas):
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
     # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
 
+def drawMazeBkgd(app, canvas):
+    canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.mazeBkgd))
+
 def mazeMode_redrawAll(app, canvas):
+    drawMazeBkgd(app, canvas)
     drawGraph(app, canvas, app.mazeGraph)
     # print(app.mazePlayer.row, app.mazePlayer.col)
     drawEnemies(app, canvas)
@@ -309,7 +339,9 @@ def mazeMode_redrawAll(app, canvas):
     #        drawCell(app, canvas, row, col, "red")
     for i in range(app.totalRooms):
         drawDoor(app, canvas, i)
-    canvas.create_rectangle(app.margin, app.margin, app.gridWidth+app.margin, app.gridHeight+app.margin)
+    # draw map border
+    canvas.create_rectangle(app.margin, app.margin, app.gridWidth+app.margin, 
+                    app.gridHeight+app.margin, width=2)
     if app.completedRooms: drawPortal(app, canvas)
     drawPlayer(app, canvas)
 
@@ -346,6 +378,9 @@ def initRoomModeParams(app):
 def roomMode_timerFired(app):
     currTime = time.time()
 
+    # invisible item
+    app.currRoom.invisibilityPotion.checkCollision(app.player)
+    
     # health booster item
     app.player = app.currRoom.healthBooster.checkCollision(app.player)
 
@@ -357,11 +392,15 @@ def roomMode_timerFired(app):
         app.startFreezeTime = time.time()
         app.currRoom.enemyStepTime = 3
 
-    # enemy recalculates path every 5s
-    if currTime - app.bfsStartTime > 5:
+    # enemy recalculates path every 3s
+    if currTime - app.bfsStartTime > 3:
         for enemy in app.currRoom.roomEnemies:
+            targetRow, targetCol = app.player.row, app.player.col
+            if (app.currRoom.invisibilityPotion.collected and 
+                currTime - app.currRoom.invisibilityPotion.collectedTime < 10):
+                targetRow, targetCol = random.randint(0,app.rows-1), random.randint(0,app.cols-1)
             enemy.path = bfs(app.currRoom.roomGraph, (enemy.row, enemy.col),
-                (app.player.row, app.player.col) )
+                (targetRow, targetCol) )
         app.dfsStartTime = time.time()
 
     # enemy takes a step every interval of stepTime
@@ -439,6 +478,13 @@ def drawBullets(app, canvas):
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # default: travelling right
+        if bullet.dir == (1,0): # down
+            sprite = sprite.rotate(-90)
+        elif bullet.dir == (-1,0): # up
+            sprite = sprite.rotate(90)
+        elif bullet.dir == (0,-1): # left
+            sprite = sprite.rotate(180)
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
     # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
@@ -474,14 +520,28 @@ def drawTimeFreezer(app, canvas):
         sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
 
+
+def drawItem(app, canvas, item, sprite):
+    if not item.collected:
+        x0, y0, x1, y1 = getCellBounds(app, (item.row, item.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+
+
+def drawRoomBkgd(app, canvas):
+    canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.roomBkgd))
+
 def roomMode_redrawAll(app, canvas):
     # drawBoard(app, canvas)
+    drawRoomBkgd(app, canvas)
     drawRoomWalls(app, canvas)
     drawPlayer(app, canvas)
     drawEnemies(app, canvas)
     drawBullets(app, canvas)
     drawHealthBooster(app, canvas)
     drawTimeFreezer(app, canvas)
+    drawItem(app, canvas, app.currRoom.invisibilityPotion, app.invisibilityPotionSprite)
 
     if app.currRoom.roomEnemies == []: drawDoor(app, canvas)
 

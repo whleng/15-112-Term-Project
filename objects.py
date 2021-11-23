@@ -163,6 +163,7 @@ class InvisibilityPotion(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
         self.collected = False
+        self.collectedTime = None
 
     def checkCollision(self, target):
         if (self.row == target.row and self.col == target.col 

@@ -111,3 +111,7 @@ class Room(object):
         row, col = createObjectInRoom(app, self.occupiedCoords)
         self.door = Door(row, col, self.roomNum) # to escape back 
         self.occupiedCoords.add((row, col))
+
+        row, col = createObjectInRoom(app, self.occupiedCoords)
+        self.invisibilityPotion = InvisibilityPotion(row, col)
+        self.occupiedCoords.add((row, col))

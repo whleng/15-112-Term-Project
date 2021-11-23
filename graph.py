@@ -175,3 +175,14 @@ def getNeighbours(app, rows, cols, row, col, visited):
             else: 
                 visitedNeighbours.add( (newRow, newCol))
     return visitedNeighbours, unvisitedNeighbours
+
+##############################################################################
+# NO DEAD END MAP GENERATION
+# This algorithm tries to create a maze with no dead ends through the use of DFS/recursion
+# Loosely referenced from TA Lecture: Graph Algorithms (Maze Generation)
+##############################################################################
+
+# dfs until every node has been visited
+# check through each node
+# if a node only has one neighbour, connect it to a neighbour beside it 
+# backtrack to the previous above node that has not been visited 
