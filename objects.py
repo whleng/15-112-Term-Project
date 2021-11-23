@@ -24,6 +24,7 @@ class Player(object):
     # generate bullets in self.dir
     def attack(self):
         bullet = Bullet(self.row, self.col, self.dir)
+        self.bullets.append(bullet)
 
 class Enemy(object):
     def __init__(self, row, col):
@@ -112,10 +113,11 @@ class HealthBooster(object):
         self.collected = False
 
     def checkCollision(self, target):
-        gain = 10
+        gain = 50
         if (self.row == target.row and self.col == target.col 
             and self.collected == False):
             target.health += gain
+            if target.health > 100: target.health = 100
             self.collected = True
             print("HEALTH!")
         return target

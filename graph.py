@@ -55,7 +55,7 @@ def dfs(graph, startNode, targetNode): # does not find shortest path
     solution = dict()
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
-    print("sol:", solution)
+    # print("sol:", solution)
     return solution # a list of coordinates
 
 # returns a list containing (row, col) positions of path

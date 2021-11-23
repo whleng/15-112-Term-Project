@@ -63,7 +63,7 @@ def defend(app):
     app.boss.shield = True
     for bullet in app.player.bullets:
         if isInRange(app, bullet, app.boss):
-            print(bullet.dir)
+            # print(bullet.dir)
             stepDir = random.choice([1,-1])
             if bullet.dir[0] != 0: # (1,0) or (-1,0) horizontal movement
                 app.boss.x += step * stepDir

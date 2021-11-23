@@ -136,11 +136,12 @@ def initSprites(app):
     
     app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
     app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
-    
+    app.enemySpriteCounter = 0
+
     app.doorSprite =  app.loadImage(r"Graphics/door.png")
     app.openedDoorSprite =  app.loadImage(r"Graphics/openDoor.png")
    
-    app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
+    app.healthBoosterSprite = app.loadImage(r"Graphics/healthBooster.png")
     app.timeFreezerSprite = app.loadImage(r"Graphics/hourglass.png")
 
     app.portalSprite = app.loadImage(r"Graphics/portal.png")

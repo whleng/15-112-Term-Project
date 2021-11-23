@@ -26,7 +26,7 @@ def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=Non
     
 # converts between (drow, dcol) and name of direction
 def convertDirections(app, dir):
-    print(dir)
+    # print(dir)
     if dir in app.directions: # in drow, dcol form
         return app.arrowKeys[app.directions.index(dir)]
     elif dir in app.arrowKeys: # in arrow key form

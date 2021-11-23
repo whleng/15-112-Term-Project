@@ -14,7 +14,7 @@ def createRoomGraph(app, wallsCoords):
                 _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
                 for neighbour in neighbours: 
                     if neighbour not in wallsCoords: # if neighbour is not a wall
-                        print("neighbour: ", neighbour)
+                        # print("neighbour: ", neighbour)
                         graph.addEdge(cell, neighbour) 
     return graph
 
@@ -30,7 +30,7 @@ def createWalls(app, board):
             wallSet, wallSetCoords = result
             walls = walls.union(wallSet)
             wallsCoords = wallsCoords.union(wallSetCoords)
-            print("here", walls)
+            # print("here", walls)
     return walls, wallsCoords
 
 # chooses a random row, col to place a wall
@@ -43,13 +43,13 @@ def placeWall(app, row, col, board, wallsCoords):
             dir = random.choice(directions)
             wallList = checkEmptyFromDirection(app, row, col, 
                         board, dir, wallSetSize, wallsCoords)
-            print(wallList)
+            # print(wallList)
             if wallList != None:
                 for (wallRow, wallCol) in wallList:
                     wallSetCoords.add( (wallRow, wallCol) )
                     wall = Wall(wallRow, wallCol)
                     wallSet.add(wall)
-                print("place", wallSet, wallSetCoords)
+                # print("place", wallSet, wallSetCoords)
                 return (wallSet, wallSetCoords)
     return None
         
@@ -61,7 +61,7 @@ def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords)
     for i in range(-1, wallSetSize+2):
         newRow = row + drow * i
         newCol = col + dcol * i
-        print(newRow, newCol)
+        # print(newRow, newCol)
         if not checkCellEmpty(app, newRow, newCol, board, wallsCoords): 
             return None
         if i < wallSetSize: wallList.add( (newRow, newCol) )
@@ -104,7 +104,7 @@ class Room(object):
             bfs(self.roomGraph, (enemy.row, enemy.col),
                 (app.player.row, app.player.col) )
         
-        self.enemyStepTime = 0.3
+        self.enemyStepTime = 0.5
 
         row, col = createObjectInRoom(app, self.occupiedCoords)
         self.healthBooster = HealthBooster(row, col)
