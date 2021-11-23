@@ -1,6 +1,5 @@
 from cmu_112_graphics import *
 from graph import *
-from mazeMap import *
 from room import *
 from objects import *
 from bossRoom import *
@@ -8,12 +7,10 @@ from generalFunctions import *
 import time
 
 #########################################################
-# Variables
 
 WIDTH = 640
 HEIGHT = 640
 
-# returns the value of game dimensions
 def gameDimensions():
     rows, cols, margin = 15, 15, 20 # 38, 65, 20, 0 
     # game dimensions can be changed here
@@ -26,42 +23,17 @@ def gameDimensions():
 def appStarted(app):
     app.mode = "mazeMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
-    app.cx, app.cy = app.width//2, app.height//2
-    app.timerDelay = 10
+    app.winGame = None
+
+    initGeneralParams(app) # time, width/height of cells
+    initSprites(app)
+    initBackgrounds(app)
+
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
-    
-    app.winGame = None
-    
-    app.startTime = time.time()
-    app.bfsStartTime = time.time()
-    app.arrowKeys = ["Up", "Right", "Down", "Left"]
-    # "Up", "Right", "Down", "Left"
-    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    app.rows, app.cols, app.margin = gameDimensions()
-    app.gridWidth  = app.width - 2*app.margin
-    app.gridHeight = app.height - 2*app.margin
-    app.cellWidth = app.gridWidth/app.rows
-    app.cellHeight = app.gridHeight/app.cols
-    # app.cellWidth = app.gridWidth / app.cols
-    # app.cellHeight = app.gridHeight / app.rows
 
-
-    app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
-    app.playerSprites = createMovingSprites(app, app.playerSpriteSheet, 
-                    21, 13, range(8,12), 9)
-    app.playerSpriteCounter = 0
-    app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
-    app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
-    app.bulletSprites = app.bulletSprites[9:] # temporary fix  
-    app.oneBulletSprite = app.loadImage(r"Graphics/oneBullet.png")
-    app.doorSprite =  app.loadImage(r"Graphics/door.png")
-    app.openedDoorSprite =  app.loadImage(r"Graphics/openDoor.png")
-    app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
-    app.timeFreezerSprite = app.loadImage(r"Graphics/hourglass.png")
-
-    if app.mode == "mazeMode":
+    elif app.mode == "mazeMode":
         initMazeModeParams(app)
         initRoomModeParams(app)
 
@@ -71,17 +43,7 @@ def appStarted(app):
     elif app.mode == "bossMode":
         initBossModeParams(app)
         
-
-    bkgd = app.loadImage(r"Graphics/gameOver.jpg")
-    imageWidth, imageHeight = bkgd.size
-    imagecx, imagecy = imageWidth//2, imageHeight//2
-    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
-    app.loseModeImage =  bkgd.crop(cropCoords)
-    bkgd = app.loadImage(r"Graphics/winGame.jpg")
-    imageWidth, imageHeight = bkgd.size
-    imagecx, imagecy = imageWidth//2, imageHeight//2
-    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
-    app.winModeImage =  bkgd.crop(cropCoords)
+   
     
 #########################################################
 # SPLASHSCREEN MODE
@@ -91,9 +53,9 @@ def loadSplashscreen(app):
     bkgd = app.loadImage(r"Graphics/dungeon.jpg")
     imageWidth, imageHeight = bkgd.size
     imagecx, imagecy = imageWidth//2, imageHeight//2
-    print(imagecx, imagecy) 
+    # print(imagecx, imagecy) 
     cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
-    print(cropCoords)
+    # print(cropCoords)
     return bkgd.crop(cropCoords)
 
 def drawSplashscreen(app, canvas):
@@ -118,7 +80,7 @@ def drawButtons(app, canvas):
 def splashscreenMode_mousePressed(app, event):
     x0, y0, x1, y1 = app.startButton
     if x0 < event.x < x1 and y0 < event.y < y1:
-        print("changed")
+        # print("changed")
         app.mode = "mazeMode"
 
 def splashscreenMode_redrawAll(app, canvas):
@@ -129,6 +91,65 @@ def splashscreenMode_redrawAll(app, canvas):
 #########################################################
 # GENERAL FUNCTIONS
 #########################################################
+
+def initGeneralParams(app):
+    app.cx, app.cy = app.width//2, app.height//2
+    app.timerDelay = 10
+    
+    app.startTime = time.time()
+    app.bfsStartTime = time.time()
+    app.arrowKeys = ["Up", "Right", "Down", "Left"]
+    # "Up", "Right", "Down", "Left"
+    app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    app.rows, app.cols, app.margin = gameDimensions()
+    app.gridWidth  = app.width - 2*app.margin
+    app.gridHeight = app.height - 2*app.margin
+    app.cellWidth = app.gridWidth/app.rows
+    app.cellHeight = app.gridHeight/app.cols
+
+
+def initBackgrounds(app):
+    bkgd = app.loadImage(r"Graphics/gameOver.jpg")
+    imageWidth, imageHeight = bkgd.size
+    imagecx, imagecy = imageWidth//2, imageHeight//2
+    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
+    app.loseModeImage =  bkgd.crop(cropCoords)
+
+    bkgd = app.loadImage(r"Graphics/winGame.jpg")
+    imageWidth, imageHeight = bkgd.size
+    imagecx, imagecy = imageWidth//2, imageHeight//2
+    cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
+    app.winModeImage =  bkgd.crop(cropCoords)
+
+def initSprites(app):
+    app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
+    app.playerSprites = createMovingSprites(app, app.playerSpriteSheet, 
+                    21, 13, range(8,12), 9)
+    app.playerSpriteCounter = 0
+    
+    app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
+    app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
+    app.bulletSprites = app.bulletSprites[9:] # temporary fix  
+    app.oneBulletSprite = app.loadImage(r"Graphics/oneBullet.png")
+    
+    app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
+    
+    app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
+    app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
+    
+    app.doorSprite =  app.loadImage(r"Graphics/door.png")
+    app.openedDoorSprite =  app.loadImage(r"Graphics/openDoor.png")
+   
+    app.healthBoosterSprite = app.loadImage(r"Graphics/bullets.png")
+    app.timeFreezerSprite = app.loadImage(r"Graphics/hourglass.png")
+
+    app.portalSprite = app.loadImage(r"Graphics/portal.png")
+    app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
+    app.portalSpriteCounter = 0
+
+    app.bossSprite = app.loadImage(r"Graphics/man_eater_flower.png")
+    app.bossSprites = createMovingSprites(app, app.bossSprite, 4, 3, range(4), 3)
+    app.bossSpriteCounter = 0
 
 
 def drawHealthBar(app, canvas, character, x0, y0, x1, y1):
@@ -158,7 +179,7 @@ def drawPlayer(app, canvas):
 
 # takes in the character and returns the current sprite to be used
 def getSpriteInFrame(app, character, sprites, spriteCounter):
-    print("here", character.dir)
+    # print("here", character.dir)
     sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
@@ -168,18 +189,14 @@ def getSpriteInFrame(app, character, sprites, spriteCounter):
 def drawEnemies(app, canvas):
     # draw sprite
     if app.mode == "roomMode":
-
         for enemy in app.currRoom.roomEnemies:
             sprite, cx, cy = getSpriteInFrame(app, enemy, 
                             app.enemySprites, app.enemySpriteCounter)
             canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
             x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
             drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
-    
-    else:
-        pass
+
     # draw basic enemy
-    # temporarily having only 1 enemy
     # enemy = app.enemy 
     # drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
     # for enemy in app.roomEnemies:
@@ -208,12 +225,8 @@ def initMazeModeParams(app):
     #             (app.player.row, app.player.col))
     
     # init portal
-    app.portalSprite = app.loadImage(r"Graphics/portal.png")
-    app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
-    app.portalSpriteCounter = 0
     app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
     
-
 
 def mazeMode_timerFired(app):
     player = app.mazePlayer
@@ -240,7 +253,7 @@ def mazeMode_timerFired(app):
 def mazeMode_keyPressed(app, event):
     playerControls(app, event, app.mazePlayer)
 
-# draw graph works
+# draw grid based on graph
 def drawGraph(app, canvas, graph):
     # graph is an instance of the Graph class
     unvisitedCells = set()
@@ -252,9 +265,9 @@ def drawGraph(app, canvas, graph):
         visitedCells.add(node)
         _, neighbours = getNeighbours(app, app.rows, app.cols, 
                             node[0], node[1], visitedCells)
-        #print(neighbours)
+        # print(neighbours)
         for neighbour in neighbours:
-            #print(neighbour)
+            # print(neighbour)
             # if neighbour does not have a connected edge to the node
             if (node not in graph.table or 
                 neighbour not in graph.getNeighbours(node)):
@@ -290,7 +303,7 @@ def drawPortal(app, canvas):
 
 def mazeMode_redrawAll(app, canvas):
     drawGraph(app, canvas, app.mazeGraph)
-    print(app.mazePlayer.row, app.mazePlayer.col)
+    # print(app.mazePlayer.row, app.mazePlayer.col)
     drawEnemies(app, canvas)
     # for debugging path-finding of enemy
     # for (row, col) in app.path:
@@ -307,14 +320,7 @@ def mazeMode_redrawAll(app, canvas):
 
 def initRoomModeParams(app):
     app.player = Player()
-
-    # init graphics
-    app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
-    app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
-    app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
-    app.enemySpriteCounter = 0
-    app.healthBoosterSprite = app.loadImage(r"Graphics/healthBooster.png")
-
+    
     # init all rooms
     app.completedRooms = False
 
@@ -337,27 +343,6 @@ def initRoomModeParams(app):
         enemyCount = i + 1
         room = Room(app, i, row, col, enemyCount)
         app.rooms.append(room)
-
-    # The following inits have been done within each instance of room
-    # # app.roomItems = []
-    # app.walls, app.wallsCoords = createWalls(app)
-    # # print("start graph")
-    # app.roomGraph = createRoomGraph(app)
-    # # print(app.graph.table)
-    # # can proceed to add more enemies into list later on 
-    # app.enemyCount = 1
-    # app.roomEnemies = []
-    # for i in range(app.enemyCount):
-    #     row, col = createObjectInRoom(app)
-    #     app.roomEnemies.append(Enemy(row, col))
-    # for enemy in app.roomEnemies:
-    #     enemy.path = bfs(app.roomGraph, (enemy.row, enemy.col),
-    #         (app.player.row, app.player.col) )
-
-    # row, col = createObjectInRoom(app)
-    # app.healthBooster = HealthBooster(row, col)
-    # row, col = createObjectInRoom(app)
-    # app.timeFreezer = TimeFreezer(row, col)
 
 def roomMode_timerFired(app):
     currTime = time.time()
@@ -401,7 +386,7 @@ def roomMode_timerFired(app):
 
     # check if player attacked enemy
     for bullet in app.player.bullets:
-        print("bullet:", bullet)
+        # print("bullet:", bullet)
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol 
@@ -420,20 +405,12 @@ def roomMode_timerFired(app):
             print("Congrats! Going back to maze...")
             app.mode = "mazeMode"
 
-# should add some stuff 
 def roomMode_keyPressed(app, event):
     playerControls(app, event, app.player)
 
 #####################################################
 # Drawing Functions
 #####################################################
-
-# draws one cell according to its row and col position
-def drawCell(app, canvas, row, col, cellColor):
-    x = app.margin + col * app.cellWidth
-    y = app.margin + row * app.cellHeight
-    canvas.create_rectangle(x, y, x + app.cellWidth, y + app.cellHeight,
-                            fill=cellColor)
 
 # draws every individual cell in the board
 def drawBoard(app, canvas):
@@ -442,9 +419,9 @@ def drawBoard(app, canvas):
                 cellColor = app.board[row][col]
                 drawCell(app, canvas, row, col, cellColor) 
 
+# draw walls using sprite
 def drawRoomWalls(app, canvas):
     for wallCoord in app.currRoom.wallsCoords:
-        ## draw walls using sprite, need to loop through wall in wall coords
         x0, y0, x1, y1 = getCellBounds(app, wallCoord)
         cx, cy = (x0+x1)//2, (y0+y1)//2
         imageWidth, imageHeight = app.wallSprite.size
@@ -514,26 +491,13 @@ def roomMode_redrawAll(app, canvas):
 # BOSS MODE
 #########################################################
 
-
 def initBossModeParams(app):
     app.boss = Boss(10, 10)
     app.player = Player()
     app.gameEvent = None
-    app.cols, app.rows, app.margin, app.cellSize = 20, 20, 0, 20
-    app.board = [ ["white"] *  app.cols for i in range(app.rows)]
-    app.bossSprite = app.loadImage(r"Graphics/man_eater_flower.png")
-    app.bossSprites = createMovingSprites(app, app.bossSprite, 4, 3, range(4), 3)
-    app.bossSpriteCounter = 0
-
+    
+# assigns the event to boss based on the user interaction
 def bossMode_keyPressed(app, event):
-    # if event.key == "Space":
-    #     app.gameEvent = "player attacks"
-    # elif event.key == "Up":
-    #     app.gameEvent = "player moves"
-    # else:
-    #     app.gameEvent = "player stops attack"
-        
-    app.arrowKeys = ["Up", "Right", "Down", "Left"]
     # "Up", "Right", "Down", "Left"
     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     if event.key in app.arrowKeys:
@@ -553,19 +517,26 @@ def bossMode_keyPressed(app, event):
 
 def bossMode_timerFired(app):
     app.boss.on_event(app, app.gameEvent)
+
+    # check if player's bullets hit boss
     for bullet in app.player.bullets:
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
         bullet.checkCollision(app.boss)
+    
+    # check if boss' bullets hit player
     for bullet in app.boss.bullets:
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol
         bullet.checkCollision(app.player)
+
+    # check if alive
     if app.boss.health < 0: app.winGame = True
     if app.player.health < 0: app.winGame = False
 
+    # changing mode to end game
     if app.winGame != None:
         if app.winGame: app.mode = "winMode"
         else: app.mode = "loseMode"
@@ -606,7 +577,6 @@ def drawBoss(app, canvas):
 
 def bossMode_redrawAll(app, canvas):
     print(app.gameEvent)
-    print(app.boss.x, app.boss.y)
     # drawBoard(app, canvas)
     drawPlayer(app, canvas)
     drawBoss(app, canvas)
