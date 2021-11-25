@@ -186,3 +186,11 @@ def getNeighbours(app, rows, cols, row, col, visited):
 # check through each node
 # if a node only has one neighbour, connect it to a neighbour beside it 
 # backtrack to the previous above node that has not been visited 
+
+##############################################################################
+# KRUSKAL'S ALGORITHM
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+##############################################################################

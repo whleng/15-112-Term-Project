@@ -21,7 +21,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "splashscreenMode" 
+    app.mode = "bossMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.winGame = None
 
@@ -139,7 +139,7 @@ def createBackground(app, image):
     imageWidth, imageHeight = image.size
     imagecx, imagecy = imageWidth//2, imageHeight//2
     cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy    
-    return image.crop(cropCoords)
+    return ImageTk.PhotoImage(image.crop(cropCoords))
 
 def initSprites(app):
     app.playerSpriteSheet = app.loadImage(r"Graphics/player.png")
@@ -147,36 +147,71 @@ def initSprites(app):
                     21, 13, range(8,12), 9)
     app.playerSpriteCounter = 0
     
-    app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
-    app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
-    app.bulletSprites = app.bulletSprites[9:] # temporary fix  
-    app.oneBulletSprite = app.loadImage(r"Graphics/oneBullet.png")
+    # app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
+    # app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
+    # app.bulletSprites = app.bulletSprites[9:] # temporary fix  
+    # bullet sprites with 4 directions
+    app.oneBulletSprites = createBulletSprites(app, "Graphics/oneBullet.png")
     
-    app.wallSprite = app.loadImage(r"Graphics/wall.jpg")
+    app.wallSprite = processSprite(app, "Graphics/wall.jpg")
     
     app.enemySprite = app.loadImage(r"Graphics/big_worm.png")
     app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
     app.enemySpriteCounter = 0
 
-    app.doorSprite =  app.loadImage(r"Graphics/door.png")
-    app.openedDoorSprite =  app.loadImage(r"Graphics/openDoor.png")
+    app.doorSprite = processSprite(app, "Graphics/door.png")
+    app.openedDoorSprite =  processSprite(app, "Graphics/openDoor.png")
    
-    app.healthBoosterSprite = app.loadImage(r"Graphics/healthBooster.png")
-    app.timeFreezerSprite = app.loadImage(r"Graphics/hourglass.png")
+    app.healthBoosterSprite = processSprite(app, "Graphics/healthBooster.png")
+    app.timeFreezerSprite = processSprite(app, "Graphics/hourglass.png")
 
     app.portalSprite = app.loadImage(r"Graphics/portal.png")
     app.portalSprites = createObjectSprites(app, app.portalSprite, 1, 4, 4)
     app.portalSpriteCounter = 0
 
     app.bossSprite = app.loadImage(r"Graphics/man_eater_flower.png")
-    app.bossSprites = createMovingSprites(app, app.bossSprite, 4, 3, range(4), 3)
+    app.bossSprites = createMovingBossSprites(app, app.bossSprite, 4, 3, range(4), 3)
     app.bossSpriteCounter = 0
 
-    app.barrelSprite = app.loadImage(r"Graphics/barrel.png")
+    app.barrelSprite = processSprite(app, "Graphics/barrel.png")
 
-    app.lavaSprite = app.loadImage(r"Graphics/lava.png")
-    app.invisibilityPotionSprite = app.loadImage(r"Graphics/blue potion.png")
+    app.lavaSprite = processSprite(app, "Graphics/lava.png")
+    app.invisibilityPotionSprite = processSprite(app, "Graphics/blue potion.png")
 
+
+def createBulletSprites(app, path):
+    sprite = app.loadImage(path)
+    _, imageHeight = sprite.size
+    spriteHeightFactor = app.cellHeight / imageHeight
+    sprite = app.scaleImage(sprite, spriteHeightFactor)
+    # sprite = sprite.resize( (int(app.cellWidth), int(app.cellHeight)) )
+    sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} 
+    sprites["Right"] = ImageTk.PhotoImage(sprite)
+    # down       
+    newSprite = sprite.rotate(-90)
+    sprites["Down"] = ImageTk.PhotoImage(newSprite)
+    # up       
+    newSprite = sprite.rotate(90)
+    sprites["Up"] = ImageTk.PhotoImage(newSprite)
+    # left       
+    newSprite = sprite.rotate(180)
+    sprites["Left"] = ImageTk.PhotoImage(newSprite)
+    return sprites
+
+def createMovingBossSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spriteRows, spriteCols):
+    sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} 
+    imageWidth, imageHeight = spriteSheet.size
+    spriteHeightFactor = app.cellHeight / (imageHeight/(spriteSheetRows+1))
+    dirs = ["Up", "Left", "Down", "Right"]
+    for row in range(4): # leftRow, rightRow, upRow, downRow 
+        for col in range(spriteSheetCols):
+            if col < spriteCols: 
+                spriteRow, dir = spriteRows[row], dirs[row]
+                sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, imageHeight/spriteSheetRows*spriteRow, 
+                            imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(spriteRow+1)))
+                scaledsprite = app.scaleImage(sprite, spriteHeightFactor*3)
+                sprites[dir].append(ImageTk.PhotoImage(scaledsprite))
+    return sprites
 
 def drawHealthBar(app, canvas, character, x0, y0, x1, y1):
     x2, y2, x3, y3 = x0 + app.cellWidth//10, y0 - app.cellWidth//10, x1 - app.cellWidth//10, y0 - app.cellWidth//10*3
@@ -194,8 +229,8 @@ def drawPlayer(app, canvas):
     x0, y0, x1, y1 = getCellBounds(app, (player.row, player.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
     
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    canvas.create_image(cx, cy, image=sprite)
     # health bar
     if app.mode != "mazeMode":
         drawHealthBar(app, canvas, app.player, x0, y0, x1, y1)
@@ -209,7 +244,7 @@ def drawEnemies(app, canvas):
         for enemy in app.currRoom.roomEnemies:
             sprite, cx, cy = getSpriteInFrame(app, enemy, 
                             app.enemySprites, app.enemySpriteCounter)
-            canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+            canvas.create_image(cx, cy, image=sprite)
             x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
             drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
 
@@ -323,11 +358,11 @@ def drawPortal(app, canvas):
     x0, y0, x1, y1 = getCellBounds(app, (app.portal.row, app.portal.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
     sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    canvas.create_image(cx, cy, image=sprite)
     # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
 
 def drawMazeBkgd(app, canvas):
-    canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.mazeBkgd))
+    canvas.create_image(app.cx, app.cy, image=app.mazeBkgd)
 
 def mazeMode_redrawAll(app, canvas):
     drawMazeBkgd(app, canvas)
@@ -435,7 +470,7 @@ def roomMode_timerFired(app):
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol 
-        bullet.spriteCounter = (1 + bullet.spriteCounter) % len(app.bulletSprites)
+        # bullet.spriteCounter = (1 + bullet.spriteCounter) % len(app.bulletSprites)
         if (bullet.row < 0 or bullet.row >= app.rows or
             bullet.col < 0 or bullet.col >= app.cols):
             app.player.bullets.remove(bullet) 
@@ -469,11 +504,11 @@ def drawRoomWalls(app, canvas):
     for wallCoord in app.currRoom.wallsCoords:
         x0, y0, x1, y1 = getCellBounds(app, wallCoord)
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        imageWidth, imageHeight = app.wallSprite.size
-        scaleFactor =  (x1-x0) / imageWidth 
+        # imageWidth, imageHeight = app.wallSprite.size
+        # scaleFactor =  (x1-x0) / imageWidth 
         # print(scaleFactor)
-        wallSprite = app.scaleImage(app.wallSprite, scaleFactor)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(wallSprite))
+        # wallSprite = app.scaleImage(app.wallSprite, scaleFactor)
+        canvas.create_image(cx, cy, image=app.wallSprite)
 
         # draw wall as a circle, loop through wall in walls
         # drawCell(app, canvas, wall.row, wall.col, wall.color)
@@ -481,18 +516,20 @@ def drawRoomWalls(app, canvas):
 def drawBullets(app, canvas):
     for bullet in app.player.bullets:
         # sprite = app.bulletSprites[bullet.spriteCounter]
-        sprite = app.oneBulletSprite
+        sprites = app.oneBulletSprites
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         # default: travelling right
         if bullet.dir == (1,0): # down
-            sprite = sprite.rotate(-90)
+            bulletDir = "Down"
         elif bullet.dir == (-1,0): # up
-            sprite = sprite.rotate(90)
+            bulletDir = "Up"
         elif bullet.dir == (0,-1): # left
-            sprite = sprite.rotate(180)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+            bulletDir = "Left"
+        else:
+            bulletDir = "Right"
+        canvas.create_image(cx, cy, image=sprites[bulletDir])
 
     # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
@@ -506,38 +543,34 @@ def drawDoor(app, canvas, doorNum=None):
         x0, y0, x1, y1 = getCellBounds(app, app.doorCoords[doorNum] )
         if doorNum in app.visitedRooms:
             sprite = app.doorSprite
-
+    
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    canvas.create_image(cx, cy, image=sprite)
 
 def drawHealthBooster(app, canvas):
     if not app.currRoom.healthBooster.collected:
         sprite = app.healthBoosterSprite
         x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.healthBooster.row, app.currRoom.healthBooster.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+        canvas.create_image(cx, cy, image=sprite)
 
 def drawTimeFreezer(app, canvas):
     if not app.currRoom.timeFreezer.collected:
         sprite = app.timeFreezerSprite
         x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.timeFreezer.row, app.currRoom.timeFreezer.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+        canvas.create_image(cx, cy, image=sprite)
 
 
 def drawItem(app, canvas, item, sprite):
     if not item.collected:
         x0, y0, x1, y1 = getCellBounds(app, (item.row, item.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+        canvas.create_image(cx, cy, image=sprite)
 
 
 def drawRoomBkgd(app, canvas):
-    canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.roomBkgd))
+    canvas.create_image(app.cx, app.cy, image=app.roomBkgd)
 
 def roomMode_redrawAll(app, canvas):
     # drawBoard(app, canvas)
@@ -631,46 +664,44 @@ def bossMode_timerFired(app):
 
 def drawBossRoomBullets(app, canvas):
     for bullet in app.player.bullets:
-        sprite = app.bulletSprites[bullet.spriteCounter]
+        # sprite = app.bulletSprites[bullet.spriteCounter]
+        sprites = app.oneBulletSprites
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         # default: travelling right
         if bullet.dir == (1,0): # down
-            sprite = sprite.rotate(-90)
+            bulletDir = "Down"
         elif bullet.dir == (-1,0): # up
-            sprite = sprite.rotate(90)
+            bulletDir = "Up"
         elif bullet.dir == (0,-1): # left
-            sprite = sprite.rotate(180)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+            bulletDir = "Left"
+        else:
+            bulletDir = "Right"
+        canvas.create_image(cx, cy, image=sprites[bulletDir])
     
     for bullet in app.boss.bullets:
-        sprite = app.bulletSprites[bullet.spriteCounter]
+        # sprite = app.bulletSprites[bullet.spriteCounter]
+        sprites = app.oneBulletSprites
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         # default: travelling right
         if bullet.dir == (1,0): # down
-            sprite = sprite.rotate(-90)
+            bulletDir = "Down"
         elif bullet.dir == (-1,0): # up
-            sprite = sprite.rotate(90)
+            bulletDir = "Up"
         elif bullet.dir == (0,-1): # left
-            sprite = sprite.rotate(180)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+            bulletDir = "Left"
+        else:
+            bulletDir = "Right"
+        canvas.create_image(cx, cy, image=sprites[bulletDir])
 
     for lava in app.boss.lavas:
         sprite = app.lavaSprite
         x0, y0, x1, y1 = getCellBounds(app, (lava.row, lava.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-        # default: travelling right
-        if bullet.dir == (1,0): # down
-            sprite = sprite.rotate(-90)
-        elif bullet.dir == (-1,0): # up
-            sprite = sprite.rotate(90)
-        elif bullet.dir == (0,-1): # left
-            sprite = sprite.rotate(180)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+        canvas.create_image(cx, cy, image=sprite)
 
     # for bullet in app.player.bullets:
     #     drawCell(app, canvas, bullet.row, bullet.col, "yellow")
@@ -684,8 +715,7 @@ def drawBoss(app, canvas):
     sprite = app.bossSprites["Down"][app.bossSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (app.boss.y, app.boss.x) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0)*scale, int(y1-y0)*scale) )
-    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(sprite))
+    canvas.create_image(cx, cy, image=sprite)
     x0, y0, x1, y1 = getCellBounds(app, (app.boss.y-1, app.boss.x) )
 
     drawHealthBar(app, canvas, app.boss, x0, y0, x1, y1)
@@ -697,11 +727,11 @@ def drawObstacles(app, canvas):
     for barrelCoord in app.barrelCoords:
         x0, y0, x1, y1 = getCellBounds(app, barrelCoord)
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        imageWidth, imageHeight = app.barrelSprite.size
-        scaleFactor =  (x1-x0) / imageWidth 
+        # imageWidth, imageHeight = app.barrelSprite.size
+        # scaleFactor =  (x1-x0) / imageWidth 
         # print(scaleFactor)
-        barrelSprite = app.scaleImage(app.barrelSprite, scaleFactor)
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(barrelSprite))
+        # barrelSprite = app.scaleImage(app.barrelSprite, scaleFactor)
+        canvas.create_image(cx, cy, image=app.barrelSprite)
     
 
 def bossMode_redrawAll(app, canvas):

@@ -77,8 +77,17 @@ def getSpriteInFrame(app, character, sprites, spriteCounter):
     sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     return sprite, cx, cy
+
+
+def processSprite(app, path):
+    sprite = app.loadImage(path)
+    _, imageHeight = sprite.size
+    spriteHeightFactor = app.cellHeight / imageHeight
+    scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+    # sprite = sprite.resize( (int(app.cellWidth), int(app.cellHeight)) )
+    return ImageTk.PhotoImage(scaledsprite)
 
 
 # Referenced from
@@ -88,7 +97,7 @@ def getSpriteInFrame(app, character, sprites, spriteCounter):
 def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spriteRows, spriteCols):
     sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} 
     imageWidth, imageHeight = spriteSheet.size
-    # spriteHeightFactor = app.cellWidth / imageHeight
+    spriteHeightFactor = app.cellHeight / (imageHeight/(spriteSheetRows+1))
     dirs = ["Up", "Left", "Down", "Right"]
     for row in range(4): # leftRow, rightRow, upRow, downRow 
         for col in range(spriteSheetCols):
@@ -96,8 +105,8 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
                 spriteRow, dir = spriteRows[row], dirs[row]
                 sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, imageHeight/spriteSheetRows*spriteRow, 
                             imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(spriteRow+1)))
-                #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
-                sprites[dir].append(sprite)
+                scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+                sprites[dir].append(ImageTk.PhotoImage(scaledsprite))
     return sprites
 
 # Referenced from
@@ -107,14 +116,14 @@ def createMovingSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spri
 def createObjectSprites(app, spriteSheet, spriteSheetRows, spriteSheetCols, spriteCols):
     sprites = list()
     imageWidth, imageHeight = spriteSheet.size
-    # spriteHeightFactor = app.cellWidth / imageHeight
+    spriteHeightFactor = app.cellHeight / (imageHeight/(spriteSheetRows+1))
     for row in range(spriteSheetRows):
         for col in range(spriteSheetCols):
             if col < spriteCols: 
                 sprite = spriteSheet.crop((imageWidth/spriteSheetCols*col, imageHeight/spriteSheetRows*row, 
                             imageWidth/spriteSheetCols*(col+1) , imageHeight/spriteSheetRows*(row+1)))
-                #scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
-                sprites.append(sprite)
+                scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
+                sprites.append(ImageTk.PhotoImage(scaledsprite))
     return sprites
 
 # returns a (row, col) that is unoccupied
