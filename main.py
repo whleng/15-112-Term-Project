@@ -21,7 +21,7 @@ def gameDimensions():
 #########################################################
 
 def appStarted(app):
-    app.mode = "bossMode" 
+    app.mode = "splashscreenMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.winGame = None
 
@@ -268,7 +268,9 @@ def drawCell(app, canvas, row, col, cellColor):
 def initMazeModeParams(app):
     # init general 
     app.mazePlayer = Player()
+    # app.mazeGraph, app.newWallsForMaze = kruskal(app, "maze")
     app.mazeGraph = prim(app)
+    app.mazeGraph = removeDeadEnds(app, app.mazeGraph)
     
     # init enemies in maze
     # app.enemy = Enemy(5,5)
@@ -367,6 +369,10 @@ def drawMazeBkgd(app, canvas):
 def mazeMode_redrawAll(app, canvas):
     drawMazeBkgd(app, canvas)
     drawGraph(app, canvas, app.mazeGraph)
+
+    # for row,col in app.newWallsForMaze:
+    #     drawCell(app, canvas, row, col, "yellow")
+
     # print(app.mazePlayer.row, app.mazePlayer.col)
     drawEnemies(app, canvas)
     # for debugging path-finding of enemy

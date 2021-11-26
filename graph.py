@@ -199,19 +199,21 @@ def removeDeadEnds(app, graph):
 
 def removeDeadEndsHelper(app, currNode, graph, visited):
     newGraph = copy.deepcopy(graph)
+    visited.add(currNode)
     for neighbour in newGraph.getNeighbours(currNode):
         # neighbour is not a dead end
-        if len(newGraph.getNeighbourbours(neighbour)) > 1:
+        if neighbour not in visited:
             visited.add(neighbour)
-            newGraph = removeDeadEndsHelper(neighbour, newGraph, visited)
-        # neighbour is a dead end
-        else:
-            # find 4 cells surrounding it
-            row, col = neighbour
-            _, possibleNeighbours = getNeighbours(app, app.rows, app.cols, row, col)
-            possibleNeighbours.remove(currNode)
-            newNeighbour = random.choice(possibleNeighbours)
-            newGraph.addEdge(neighbour, newNeighbour)
+            if len(newGraph.getNeighbours(neighbour)) > 1:
+                newGraph = removeDeadEndsHelper(app, neighbour, newGraph, visited)
+            # neighbour is a dead end
+            else:
+                # find 4 cells surrounding it
+                row, col = neighbour
+                _, possibleNeighbours = getNeighbours(app, app.rows, app.cols, row, col)
+                possibleNeighbours.remove(currNode)
+                newNeighbour = random.choice(list(possibleNeighbours))
+                newGraph.addEdge(neighbour, newNeighbour)
     return newGraph
 
 ##############################################################################
@@ -246,10 +248,15 @@ class UFDS(object):
         rootA = self.findParent(nodeA)
         rootB = self.findParent(nodeB)
         self.parent[rootA] = rootB
-        
+
 # Referenced from TA Lecture: Graph Algorithm
-def kruskal(app):
-   
+# Kruskal's can be used for maze or wall generation (in room)
+def kruskal(app, option="maze"):
+    if option == "maze":
+        minWallsCheck = 0
+    elif option == "room":
+        minWallsCheck = 820
+
     ds = UFDS()
     graph = Graph()
 
@@ -269,7 +276,7 @@ def kruskal(app):
 
     # check through all list of edges/walls
     # while walls != []: # while walls not empty
-    while len(walls) > 800:
+    while len(walls) > minWallsCheck:
         wall = random.choice(walls)
         nodeA, nodeB = wall
         rootA = ds.findParent(nodeA)
@@ -279,19 +286,14 @@ def kruskal(app):
         if rootA != rootB:
             ds.union(rootA, rootB)
             graph.addEdge(nodeA, nodeB)
+            newWalls.append(nodeA)
+            newWalls.append(nodeB)
 
         walls.remove(wall)
-        
-
-
-
-    return graph
-
-
-# pick a random edge in the graph
-# if nodes are already connected in the MST, skip (check if they have the same parent)
-# otherwise, add this edge to the tree
-# repeat until every node is connected to every other node
+    
+    # graph output is used when constructing maze
+    # newWalls output is used for constructing walls
+    return graph, newWalls
 
 
 ##############################################################################
