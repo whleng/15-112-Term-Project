@@ -94,8 +94,7 @@ class Room(object):
             self.roomEnemies.append(Enemy(row, col))
             self.occupiedCoords.add((row, col))
         for enemy in self.roomEnemies:
-            enemy.path = []
-            bfs(self.roomGraph, (enemy.row, enemy.col),
+            enemy.path = bfs(self.roomGraph, (enemy.row, enemy.col),
                 (app.player.row, app.player.col) )
         
         self.enemyStepTime = 0.5

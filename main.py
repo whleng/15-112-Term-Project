@@ -159,6 +159,9 @@ def initSprites(app):
     app.enemySprites = createMovingSprites(app, app.enemySprite, 4, 3, range(4), 3)
     app.enemySpriteCounter = 0
 
+    app.ghostSprite = app.loadImage(r"Graphics/ghost.png")
+    app.ghostSprites = createMovingSprites(app, app.ghostSprite, 4, 3, range(4), 3)
+
     app.doorSprite = processSprite(app, "Graphics/door.png")
     app.openedDoorSprite =  processSprite(app, "Graphics/openDoor.png")
    
@@ -240,13 +243,19 @@ def drawPlayer(app, canvas):
 
 def drawEnemies(app, canvas):
     # draw sprite
-    if app.mode == "roomMode":
-        for enemy in app.currRoom.roomEnemies:
-            sprite, cx, cy = getSpriteInFrame(app, enemy, 
-                            app.enemySprites, app.enemySpriteCounter)
-            canvas.create_image(cx, cy, image=sprite)
-            x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
-            drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
+    if app.mode == "mazeMode":
+        enemyList = app.mazeEnemies
+        sprites = app.ghostSprites 
+    elif app.mode == "roomMode":
+        enemyList = app.currRoom.roomEnemies
+        sprites = app.enemySprites
+    for enemy in enemyList:
+        sprite, cx, cy = getSpriteInFrame(app, enemy, 
+                        sprites, app.enemySpriteCounter)
+        canvas.create_image(cx, cy, image=sprite)
+        x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
+    if app.mode != "mazeMode":
+        drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
 
     # draw basic enemy
     # enemy = app.enemy 
@@ -271,13 +280,15 @@ def initMazeModeParams(app):
     # app.mazeGraph, app.newWallsForMaze = kruskal(app, "maze")
     app.mazeGraph = prim(app)
     app.mazeGraph = removeDeadEnds(app, app.mazeGraph)
-    
+    enemyCount = 3
     # init enemies in maze
-    app.mazeEnemy = Enemy(5,5)
-    app.path = bfs(app.mazeGraph, 
-                (app.mazeEnemy.row, app.mazeEnemy.col),
-                (app.mazePlayer.row, app.mazePlayer.col))
-    
+    app.mazeEnemies = []
+    for _ in range(enemyCount):
+        row, col = random.randint(0, app.rows), random.randint(0, app.cols)
+        app.mazeEnemies.append( Enemy(row, col) )
+    for enemy in app.mazeEnemies:
+        enemy.path = []
+        
     # init portal
     app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
     
@@ -295,23 +306,28 @@ def mazeMode_timerFired(app):
     currTime = time.time()
 
     # enemy code
-
     # enemy recalculates path every 3s
     targetRow, targetCol = app.mazePlayer.row, app.mazePlayer.col
 
     if currTime - app.bfsStartTime > 3:
-        app.mazeEnemy.path = bfs(app.mazeGraph, (app.mazeEnemy.row, 
-                app.mazeEnemy.col), (targetRow, targetCol) )
-        app.dfsStartTime = time.time()
+        for enemy in app.mazeEnemies:
+            enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
+                        (targetRow, targetCol) )
+            app.dfsStartTime = time.time()
 
     # enemy takes a step every interval of stepTime
     if currTime - app.startTime > 0.4:
-        if app.mazeEnemy.path != []:
-            prevRow, prevCol = app.mazeEnemy.row, app.mazeEnemy.col
-            app.mazeEnemy.row, app.mazeEnemy.col = app.mazeEnemy.path.pop()
-            app.mazeEnemy.dir = (app.mazeEnemy.row - prevRow, app.mazeEnemy.col - prevCol)
-            # print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
-            # print("moved", enemy.row, enemy.col)
+        for enemy in app.mazeEnemies:
+            if enemy.path != []:
+                prevRow, prevCol = enemy.row, enemy.col
+                enemy.row, enemy.col = enemy.path.pop()
+                enemy.dir = (enemy.row - prevRow, enemy.col - prevCol)
+                # print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
+                # print("moved", enemy.row, enemy.col)
+                if enemy.checkCollision(app.mazePlayer): 
+                    # app.mazePlayer.health -= 10
+                    # if app.mazePlayer.health < 0:
+                    app.mode = "loseMode"
         app.startTime = time.time()
 
     # check completion of rooms 
@@ -398,8 +414,7 @@ def mazeMode_redrawAll(app, canvas):
     #     drawCell(app, canvas, row, col, "yellow")
 
     # print(app.mazePlayer.row, app.mazePlayer.col)
-    # drawEnemies(app, canvas)
-    drawCell(app, canvas, app.mazeEnemy.row, app.mazeEnemy.col, "red")
+    drawEnemies(app, canvas)
     # for debugging path-finding of enemy
     # for (row, col) in app.path:
     #        drawCell(app, canvas, row, col, "red")
