@@ -255,7 +255,8 @@ def drawEnemies(app, canvas):
         canvas.create_image(cx, cy, image=sprite)
         x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
     if app.mode != "mazeMode":
-        drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
+        for enemy in enemyList:
+            drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
 
     # draw basic enemy
     # enemy = app.enemy 
@@ -288,7 +289,6 @@ def initMazeModeParams(app):
         app.mazeEnemies.append( Enemy(row, col) )
     for enemy in app.mazeEnemies:
         enemy.path = []
-        
     # init portal
     app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
     
@@ -349,6 +349,7 @@ def mazeMode_timerFired(app):
                 app.currRoomNum = door.roomNum
                 app.currRoom = app.rooms[app.currRoomNum]
                 app.player.row, app.player.col = (0,0)
+                app.player.bullets = []
                 app.visitedRooms.add(door.roomNum)
         
     
@@ -436,7 +437,7 @@ def initRoomModeParams(app):
     # init all rooms
     app.completedRooms = False
 
-    app.totalRooms = 2
+    app.totalRooms = 3
     app.rooms = []
     app.currRoom = None
     app.currRoomNum = None

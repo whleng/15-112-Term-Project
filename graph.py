@@ -32,7 +32,10 @@ class Graph(object):
         return list(self.table)
 
     def getNeighbours(self, node):
-        return set(self.table[node])
+        try:
+            return set(self.table[node])
+        except:
+            return set()
 
 # have yet to integrate the node as an object  
 class Node(object):
@@ -273,7 +276,7 @@ def kruskal(app, option="maze"):
             for neighbour in neighbours: 
                 walls.append( (cell, neighbour) )
 
-    newWalls = []
+    newWalls = set()
 
     # check through all list of edges/walls
     # while walls != []: # while walls not empty
@@ -287,8 +290,8 @@ def kruskal(app, option="maze"):
         if rootA != rootB:
             ds.union(rootA, rootB)
             graph.addEdge(nodeA, nodeB)
-            newWalls.append(nodeA)
-            newWalls.append(nodeB)
+            newWalls.add(nodeA)
+            newWalls.add(nodeB)
 
         walls.remove(wall)
     

@@ -82,7 +82,11 @@ class Room(object):
 
         self.board = [ ["white"] *  app.cols for i in range(app.rows)]
 
-        self.walls, self.wallsCoords = createWalls(app, self.board)
+        if roomNum < 2:
+            self.walls, self.wallsCoords = createWalls(app, self.board)
+        else:
+            _, self.wallsCoords = kruskal(app, option="room")
+
         self.roomGraph = createRoomGraph(app, self.wallsCoords)
 
         self.occupiedCoords = copy.deepcopy(self.wallsCoords)
