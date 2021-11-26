@@ -1,5 +1,6 @@
 from cmu_112_graphics import *
 
+
 ##############################################################################
 # GRAPH OBJECTS
 ##############################################################################
@@ -162,7 +163,7 @@ def prim(app):
     return graph
 
 # obtaining the 4 cells around a cell
-def getNeighbours(app, rows, cols, row, col, visited):
+def getNeighbours(app, rows, cols, row, col, visited=set()):
     visitedNeighbours = set()
     unvisitedNeighbours = set()
     for dir in app.directions:
@@ -186,6 +187,32 @@ def getNeighbours(app, rows, cols, row, col, visited):
 # check through each node
 # if a node only has one neighbour, connect it to a neighbour beside it 
 # backtrack to the previous above node that has not been visited 
+import copy
+
+def removeDeadEnds(app, graph):
+    # number of rows, cols in the map
+    # newGraph = copy.deepcopy(graph)
+    visited = set()
+    startNode = (0,0)
+    currNode = startNode
+    return removeDeadEndsHelper(app, currNode, graph, visited)    
+
+def removeDeadEndsHelper(app, currNode, graph, visited):
+    newGraph = copy.deepcopy(graph)
+    for neighbour in newGraph.getNeighbours(currNode):
+        # neighbour is not a dead end
+        if len(newGraph.getNeighbourbours(neighbour)) > 1:
+            visited.add(neighbour)
+            newGraph = removeDeadEndsHelper(neighbour, newGraph, visited)
+        # neighbour is a dead end
+        else:
+            # find 4 cells surrounding it
+            row, col = neighbour
+            _, possibleNeighbours = getNeighbours(app, app.rows, app.cols, row, col)
+            possibleNeighbours.remove(currNode)
+            newNeighbour = random.choice(possibleNeighbours)
+            newGraph.addEdge(neighbour, newNeighbour)
+    return newGraph
 
 ##############################################################################
 # KRUSKAL'S ALGORITHM
@@ -193,4 +220,85 @@ def getNeighbours(app, rows, cols, row, col, visited):
 
 # The following concepts and structual framework was referenced from TA lecture: 
 # Graph Algorithm
+##############################################################################
+
+# Referenced pseudocode from:
+# https://www.techiedelight.com/disjoint-set-data-structure-union-find-algorithm/
+class UFDS(object):
+    def __init__(self):
+        self.parent = dict()
+
+    def initSets(self, rows, cols):
+        for row in range(rows):
+            for col in range(cols):
+                node = row, col
+                self.parent[node] = node
+
+    def findParent(self, node):
+        if self.parent[node] == node:
+            return node
+        else: 
+            # recursively finds root
+            return self.findParent(self.parent[node])
+
+    def union(self, nodeA, nodeB):
+        # make the parent the same for both 
+        rootA = self.findParent(nodeA)
+        rootB = self.findParent(nodeB)
+        self.parent[rootA] = rootB
+        
+# Referenced from TA Lecture: Graph Algorithm
+def kruskal(app):
+   
+    ds = UFDS()
+    graph = Graph()
+
+    # create a set for each cell
+    ds.initSets(app.rows, app.cols)
+
+    # create a list of all walls (edges)
+    walls = list()
+    for row in range(app.rows):
+        for col in range(app.cols):
+            cell = row, col
+            _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
+            for neighbour in neighbours: 
+                walls.append( (cell, neighbour) )
+
+    newWalls = []
+
+    # check through all list of edges/walls
+    # while walls != []: # while walls not empty
+    while len(walls) > 800:
+        wall = random.choice(walls)
+        nodeA, nodeB = wall
+        rootA = ds.findParent(nodeA)
+        rootB = ds.findParent(nodeB)
+
+        # if nodes are in different sets
+        if rootA != rootB:
+            ds.union(rootA, rootB)
+            graph.addEdge(nodeA, nodeB)
+
+        walls.remove(wall)
+        
+
+
+
+    return graph
+
+
+# pick a random edge in the graph
+# if nodes are already connected in the MST, skip (check if they have the same parent)
+# otherwise, add this edge to the tree
+# repeat until every node is connected to every other node
+
+
+##############################################################################
+# A* PATH FINDING
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# 
+
 ##############################################################################
