@@ -179,14 +179,14 @@ def getNeighbours(app, rows, cols, row, col, visited=set()):
 
 ##############################################################################
 # NO DEAD END MAP GENERATION
-# This algorithm tries to create a maze with no dead ends through the use of DFS/recursion
-# Loosely referenced from TA Lecture: Graph Algorithms (Maze Generation)
 ##############################################################################
 
-# dfs until every node has been visited
-# check through each node
-# if a node only has one neighbour, connect it to a neighbour beside it 
-# backtrack to the previous above node that has not been visited 
+# This self-designed algorithm uses DFS/recursion 
+# It takes an existing maze and removes the dead ends
+# Loosely referenced from TA Lecture: Graph Algorithms (Maze Generation)
+
+##############################################################################
+
 import copy
 
 def removeDeadEnds(app, graph):
@@ -222,6 +222,7 @@ def removeDeadEndsHelper(app, currNode, graph, visited):
 
 # The following concepts and structual framework was referenced from TA lecture: 
 # Graph Algorithm
+
 ##############################################################################
 
 # Referenced pseudocode from:
@@ -301,6 +302,53 @@ def kruskal(app, option="maze"):
 ##############################################################################
 
 # The following concepts and structual framework was referenced from TA lecture: 
-# 
+# Graph Algorithms
 
 ##############################################################################
+
+# Reference from:
+# https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
+def astar(graph):
+    pass
+
+
+from queue import PriorityQueue
+
+def dijksrta():
+    allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
+    graph = Graph()
+    graph.addEdge((0,0), (0,1))
+    graph.addEdge((0,1), (1,1))
+    graph.addEdge((1,1), (1,2))
+    graph.addEdge((1,1), (2,1))
+    graph.addEdge((2,1), (2,2))
+    graph.addEdge((2,1), (2,0))
+    startNode = (0,0)
+    targetNode = (10,0)
+    visited = set()
+    distance = dict() 
+    solution = dict()
+    for node in allNodes:
+        distance[node] = 99999
+    distance[startNode] = 0
+    pq = PriorityQueue() # to be visited
+    pq.put( (distance[startNode], startNode) )
+    # how to ensure that priority queue sorts by second element
+    currNode = startNode
+    while currNode != targetNode:
+    # while not visited.empty():
+        weight, currNode = pq.get()
+        for neighbour in graph.getNeighbours(currNode):
+            if neighbour not in visited:
+                edge = graph.getEdge(currNode, neighbour)
+                if distance[currNode] + edge < distance[neighbour]:
+                    # if neighbour in pq: 
+                    distance[neighbour] = distance[currNode] + edge
+                    pq.put( (distance[neighbour], neighbour) )
+                    solution[neighbour] = currNode
+                visited.add(neighbour)
+        # pq.pop( (distance[currNode], currNode) )
+    print("done")
+    print(solution)
+
+# dijksrta()

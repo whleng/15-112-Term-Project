@@ -273,10 +273,10 @@ def initMazeModeParams(app):
     app.mazeGraph = removeDeadEnds(app, app.mazeGraph)
     
     # init enemies in maze
-    # app.enemy = Enemy(5,5)
-    # app.path = bfs(app.graph, 
-    #             (app.enemy.row, app.enemy.col),
-    #             (app.player.row, app.player.col))
+    app.mazeEnemy = Enemy(5,5)
+    app.path = bfs(app.mazeGraph, 
+                (app.mazeEnemy.row, app.mazeEnemy.col),
+                (app.mazePlayer.row, app.mazePlayer.col))
     
     # init portal
     app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
@@ -292,6 +292,30 @@ def initMazeModeParams(app):
 
 def mazeMode_timerFired(app):
     player = app.mazePlayer
+    currTime = time.time()
+
+    # enemy code
+
+    # enemy recalculates path every 3s
+    targetRow, targetCol = app.mazePlayer.row, app.mazePlayer.col
+
+    if currTime - app.bfsStartTime > 3:
+        app.mazeEnemy.path = bfs(app.mazeGraph, (app.mazeEnemy.row, 
+                app.mazeEnemy.col), (targetRow, targetCol) )
+        app.dfsStartTime = time.time()
+
+    # enemy takes a step every interval of stepTime
+    if currTime - app.startTime > 0.4:
+        if app.mazeEnemy.path != []:
+            prevRow, prevCol = app.mazeEnemy.row, app.mazeEnemy.col
+            app.mazeEnemy.row, app.mazeEnemy.col = app.mazeEnemy.path.pop()
+            app.mazeEnemy.dir = (app.mazeEnemy.row - prevRow, app.mazeEnemy.col - prevCol)
+            # print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
+            # print("moved", enemy.row, enemy.col)
+        app.startTime = time.time()
+
+    # check completion of rooms 
+
     if len(app.visitedRooms) == app.totalRooms:
         app.completedRooms = True
 
@@ -359,7 +383,7 @@ def drawPortal(app, canvas):
     sprite = app.portalSprites[app.portalSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (app.portal.row, app.portal.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
+    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=sprite)
     # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
 
@@ -374,7 +398,8 @@ def mazeMode_redrawAll(app, canvas):
     #     drawCell(app, canvas, row, col, "yellow")
 
     # print(app.mazePlayer.row, app.mazePlayer.col)
-    drawEnemies(app, canvas)
+    # drawEnemies(app, canvas)
+    drawCell(app, canvas, app.mazeEnemy.row, app.mazeEnemy.col, "red")
     # for debugging path-finding of enemy
     # for (row, col) in app.path:
     #        drawCell(app, canvas, row, col, "red")
