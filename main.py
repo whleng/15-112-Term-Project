@@ -162,6 +162,15 @@ def initSprites(app):
     app.ghostSprite = app.loadImage(r"Graphics/ghost.png")
     app.ghostSprites = createMovingSprites(app, app.ghostSprite, 4, 3, range(4), 3)
 
+    app.eyeballSprite = app.loadImage(r"Graphics/eyeball.png")
+    app.eyeballSprites = createMovingSprites(app, app.eyeballSprite, 4, 3, range(4), 3)
+
+    app.batSprite = app.loadImage(r"Graphics/bat.png")
+    app.batSprites = createMovingSprites(app, app.batSprite, 4, 3, range(4), 3)
+
+    app.slimeSprite = app.loadImage(r"Graphics/slime.png")
+    app.slimeSprites = createMovingSprites(app, app.slimeSprite, 4, 3, range(4), 3)
+
     app.doorSprite = processSprite(app, "Graphics/door.png")
     app.openedDoorSprite =  processSprite(app, "Graphics/openDoor.png")
    
@@ -248,7 +257,14 @@ def drawEnemies(app, canvas):
         sprites = app.ghostSprites 
     elif app.mode == "roomMode":
         enemyList = app.currRoom.roomEnemies
-        sprites = app.enemySprites
+        if app.currRoom.roomNum == 1:
+            sprites = app.enemySprites
+        elif app.currRoom.roomNum == 2:
+            sprites = app.batSprites
+        elif app.currRoom.roomNum == 3: 
+            sprites = app.slimeSprites
+        else: 
+            sprites = app.eyeballSprites
     for enemy in enemyList:
         sprite, cx, cy = getSpriteInFrame(app, enemy, 
                         sprites, app.enemySpriteCounter)
@@ -446,7 +462,7 @@ def initRoomModeParams(app):
     # init all rooms
     app.completedRooms = False
 
-    app.totalRooms = 3
+    app.totalRooms = 4
     app.rooms = []
     app.currRoom = None
     app.currRoomNum = None
