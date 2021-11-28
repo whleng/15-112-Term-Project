@@ -88,6 +88,7 @@ class Room(object):
             _, self.wallsCoords = kruskal(app, option="room")
 
         self.roomGraph = createRoomGraph(app, self.wallsCoords)
+        self.roomAllNodes = createAllNodes(app)
 
         self.occupiedCoords = copy.deepcopy(self.wallsCoords)
         self.occupiedCoords.add((app.player.row, app.player.col))
@@ -98,8 +99,13 @@ class Room(object):
             self.roomEnemies.append(Enemy(row, col))
             self.occupiedCoords.add((row, col))
         for enemy in self.roomEnemies:
-            enemy.path = bfs(self.roomGraph, (enemy.row, enemy.col),
-                (app.player.row, app.player.col) )
+            targetRow, targetCol = app.player.row, app.player.col
+            if self.roomEnemies.index(enemy) % 2 == 0:
+                enemy.path = aStar(self.roomGraph, (enemy.row, enemy.col), 
+                         (targetRow, targetCol), self.roomAllNodes)
+            else:
+                enemy.path = bfs(self.roomGraph, (enemy.row, enemy.col), 
+                         (targetRow, targetCol) )
         
         self.enemyStepTime = 0.5
 

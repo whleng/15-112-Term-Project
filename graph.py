@@ -59,7 +59,8 @@ def dfs(graph, startNode, targetNode): # does not find shortest path
     solution = dict()
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
-    # print("sol:", solution)
+    if solution != []: solution.pop()
+    print("sol:", solution)
     return solution # a list of coordinates
 
 # returns a list containing (row, col) positions of path
@@ -150,19 +151,14 @@ def prim(app):
         cells.remove(cell)
         visited.add(cell) # mark cell as visited
         row, col = cell
-        visitedNeighbours, unvisitedNeighbours = getNeighbours(app, app.rows, app.cols, row, col, visited) 
+        visitedNeighbours, unvisitedNeighbours = getNeighbours(app, app.rows, 
+                            app.cols, row, col, visited) 
         # return visited neighbours
         if len(visitedNeighbours) > 0:
             neighbour = visitedNeighbours.pop()
             graph.addEdge(neighbour, cell) 
             # randomly connect the cell to a neighbour which has been visited
         cells = set.union(cells, unvisitedNeighbours) # add unvisited neighbour to the set
-    # to create more paths, randomly add in some edges
-    # for i in range(100):
-    #     cell = random.randint(0, app.rows), random.randint(0, app.cols)
-    #     (drow, dcol) = random.choice(app.directions)
-    #     neighbour = cell[0] + drow, cell[1] + dcol
-    #     graph.addEdge(neighbour, cell)
     return graph
 
 # obtaining the 4 cells around a cell
@@ -300,41 +296,21 @@ def kruskal(app, option="maze"):
     return graph, newWalls
 
 
+
 ##############################################################################
-# A* PATH FINDING
+# DIJKSTRA ALGORITHM
 ##############################################################################
 
 # The following concepts and structual framework was referenced from TA lecture: 
 # Graph Algorithms
+# Queue documentation was also referenced: https://docs.python.org/3/library/queue.html
 
 ##############################################################################
 
-# Reference from:
-# https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
-def astar(graph):
-    pass
-
-
 from queue import PriorityQueue
+import math
 
-def dijksrta(graph, startNode, targetNode):
-    # allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
-    # graph = Graph()
-    # graph.addEdge((0,0), (0,1))
-    # graph.addEdge((0,1), (1,1))
-    # graph.addEdge((1,1), (1,2))
-    # graph.addEdge((1,1), (2,1))
-    # graph.addEdge((2,1), (2,2))
-    # graph.addEdge((2,1), (2,0))
-    # startNode = (0,0)
-    # targetNode = (2,0)
-    # # targetNode = (10,0)
-
-    allNodes = set()
-    for row in range(15):
-        for col in range(15):
-            allNodes.add( (row, col) )
-
+def dijkstra(graph, startNode, targetNode, allNodes):
     visited = set()
     distance = dict() 
     solution = dict()
@@ -344,24 +320,71 @@ def dijksrta(graph, startNode, targetNode):
     pq = PriorityQueue() # to be visited
     pq.put( (distance[startNode], startNode) )
     currNode = startNode
-    # while currNode != targetNode:
     while not pq.empty():
-        weight, currNode = pq.get()
+        if currNode == targetNode: break
+        _, currNode = pq.get()
         visited.add(currNode)
         for neighbour in graph.getNeighbours(currNode):
             if neighbour not in visited:
                 edge = graph.getEdge(currNode, neighbour)
-                newDist = distance[currNode] + edge
+                newDist = distance[currNode] + edge 
                 if newDist < distance[neighbour]:
-                    # if neighbour in pq: 
                     distance[neighbour] = newDist
                     pq.put( (distance[neighbour], neighbour) )
                     solution[neighbour] = currNode
                 visited.add(neighbour)
-        # pq.pop( (distance[currNode], currNode) )
     solution = constructPath(solution, startNode, targetNode)
-    # print(solution)
     if solution != []: solution.pop()
     return solution
 
-# dijksrta()
+##############################################################################
+# A* PATH FINDING
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithms
+#
+# Queue documentation was also referenced: https://docs.python.org/3/library/queue.html
+
+##############################################################################
+
+from queue import PriorityQueue
+import math
+
+def createAllNodes(app):
+    allNodes = set()
+    for row in range(app.rows):
+        for col in range(app.cols):
+            allNodes.add( (row, col) )
+    return allNodes
+
+def euclideanDistance(nodeA, nodeB):
+    return math.sqrt((nodeA[0]-nodeB[0])**2 + (nodeA[1]-nodeB[1])**2)
+
+def aStar(graph, startNode, targetNode, allNodes):
+    visited = set()
+    cost = dict() 
+    solution = dict()
+    for node in allNodes:
+        cost[node] = 99999
+    cost[startNode] = 0
+    pq = PriorityQueue() # to be visited
+    pq.put( (cost[startNode], startNode) )
+    currNode = startNode
+    while not pq.empty():
+        _, currNode = pq.get()
+        if currNode == targetNode: break
+        visited.add(currNode)
+        for neighbour in graph.getNeighbours(currNode):
+            if neighbour not in visited:
+                edge = graph.getEdge(currNode, neighbour)
+                newCost = cost[currNode] + edge + euclideanDistance(currNode, neighbour)
+                if newCost < cost[neighbour]:
+                    cost[neighbour] = newCost
+                    pq.put( (cost[neighbour], neighbour) )
+                    solution[neighbour] = currNode
+                visited.add(neighbour)
+    solution = constructPath(solution, startNode, targetNode)
+    if solution != []: solution.pop()
+    return solution
+

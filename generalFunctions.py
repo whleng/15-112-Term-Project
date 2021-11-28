@@ -74,7 +74,10 @@ def createRoomGraph(app, wallsCoords):
 # takes in the character and returns the current sprite to be used
 def getSpriteInFrame(app, character, sprites, spriteCounter):
     # print("here", character.dir)
-    sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
+    try:
+        sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
+    except:
+        sprite = sprites["Right"][spriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
     # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )

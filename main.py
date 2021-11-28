@@ -282,7 +282,8 @@ def initMazeModeParams(app):
     # app.mazeGraph, app.newWallsForMaze = kruskal(app, "maze")
     app.mazeGraph = prim(app)
     app.mazeGraph = removeDeadEnds(app, app.mazeGraph)
-    enemyCount = 1
+    app.mazeAllNodes = createAllNodes(app)
+    enemyCount = 3
     # init enemies in maze
     app.mazeEnemies = []
     for _ in range(enemyCount):
@@ -314,7 +315,11 @@ def mazeMode_timerFired(app):
         for enemy in app.mazeEnemies:
             # enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
             #             (targetRow, targetCol) )
-            enemy.path = dijksrta(app.mazeGraph, (enemy.row, enemy.col), 
+            if app.mazeEnemies.index(enemy) % 2 == 0:
+                enemy.path = dijkstra(app.mazeGraph, (enemy.row, enemy.col), 
+                         (targetRow, targetCol), app.mazeAllNodes)
+            else:
+                enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
                          (targetRow, targetCol) )
             app.dfsStartTime = time.time()
 
@@ -492,8 +497,13 @@ def roomMode_timerFired(app):
             targetRow, targetCol = app.tempPlayerRow, app.tempPlayerCol
 
         if currTime - app.bfsStartTime > 3:
-            enemy.path = bfs(app.currRoom.roomGraph, (enemy.row, enemy.col),
-                (targetRow, targetCol) )
+            targetRow, targetCol = app.player.row, app.player.col
+            if app.currRoom.roomEnemies.index(enemy) % 2 == 0:
+                enemy.path = aStar(app.currRoom.roomGraph, (enemy.row, enemy.col), 
+                         (targetRow, targetCol), app.currRoom.roomAllNodes)
+            else:
+                enemy.path = bfs(app.currRoom.roomGraph, (enemy.row, enemy.col), 
+                         (targetRow, targetCol) )
             app.dfsStartTime = time.time()
 
     # enemy takes a step every interval of stepTime
