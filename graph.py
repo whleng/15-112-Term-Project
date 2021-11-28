@@ -321,8 +321,8 @@ def dijkstra(graph, startNode, targetNode, allNodes):
     pq.put( (distance[startNode], startNode) )
     currNode = startNode
     while not pq.empty():
-        if currNode == targetNode: break
         _, currNode = pq.get()
+        if currNode == targetNode: break
         visited.add(currNode)
         for neighbour in graph.getNeighbours(currNode):
             if neighbour not in visited:

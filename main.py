@@ -244,8 +244,8 @@ def drawPlayer(app, canvas):
     # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=sprite)
     # health bar
-    if app.mode != "mazeMode":
-        drawHealthBar(app, canvas, app.player, x0, y0, x1, y1)
+    # if app.mode != "mazeMode":
+    drawHealthBar(app, canvas, player, x0, y0, x1, y1)
     
     # # draw basic player
     # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
@@ -303,13 +303,23 @@ def initMazeModeParams(app):
     # init enemies in maze
     app.mazeEnemies = []
     for _ in range(enemyCount):
-        row, col = random.randint(0, app.rows), random.randint(0, app.cols)
+        row, col = random.randint(5, app.rows-1), random.randint(5, app.cols-1)
         app.mazeEnemies.append( Enemy(row, col) )
     for enemy in app.mazeEnemies:
         enemy.path = []
     # init portal
-    app.portal = Portal(random.randint(0, app.rows-1), random.randint(0, app.cols-1))
-    
+    app.portal = Portal(random.randint(5, app.rows-1), random.randint(5, app.cols-1))
+    # init lava traps
+    lavaCount = 5
+    app.mazeLavas = []
+    for _ in range(lavaCount):
+        row, col = random.randint(5, app.rows-1), random.randint(5, app.cols-1)
+        app.mazeLavas.append( Lava(row, col) )
+    # init health potion
+    row, col = random.randint(5, app.rows-1), random.randint(5, app.cols-1)
+    app.mazeHealthBooster = HealthBooster(row, col)
+
+
 # create collectable items in maze mode
 # def createItemsInMaze(app):
 #     totalItems = 3
@@ -323,6 +333,15 @@ def mazeMode_timerFired(app):
     player = app.mazePlayer
     currTime = time.time()
 
+    # health item
+    app.mazePlayer = app.mazeHealthBooster.checkCollision(app.mazePlayer)
+
+    # lava
+    for lava in app.mazeLavas:
+        # modifies player's health 
+        app.mazePlayer = lava.checkCollision(app.mazePlayer, app.mazeLavas)
+        if app.mazePlayer.health < 0:
+            app.mode = "loseMode"
     # enemy code
     # enemy recalculates path every 3s
     targetRow, targetCol = app.mazePlayer.row, app.mazePlayer.col
@@ -349,9 +368,9 @@ def mazeMode_timerFired(app):
                 # print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
                 # print("moved", enemy.row, enemy.col)
                 if enemy.checkCollision(app.mazePlayer): 
-                    # app.mazePlayer.health -= 10
-                    # if app.mazePlayer.health < 0:
-                    app.mode = "loseMode"
+                    app.mazePlayer.health -= 10
+                    if app.mazePlayer.health < 0:
+                        app.mode = "loseMode"
         app.startTime = time.time()
 
     # check completion of rooms 
@@ -373,6 +392,7 @@ def mazeMode_timerFired(app):
                 app.currRoomNum = door.roomNum
                 app.currRoom = app.rooms[app.currRoomNum]
                 app.player.row, app.player.col = (0,0)
+                app.player.health = app.mazePlayer.health
                 app.player.bullets = []
                 app.visitedRooms.add(door.roomNum)
         
@@ -431,6 +451,13 @@ def drawPortal(app, canvas):
 def drawMazeBkgd(app, canvas):
     canvas.create_image(app.cx, app.cy, image=app.mazeBkgd)
 
+def drawMazeLavas(app, canvas):
+    for lava in app.mazeLavas:
+        sprite = app.lavaSprite
+        x0, y0, x1, y1 = getCellBounds(app, (lava.row, lava.col) )
+        cx, cy = (x0+x1)//2, (y0+y1)//2
+        canvas.create_image(cx, cy, image=sprite)
+
 def mazeMode_redrawAll(app, canvas):
     drawMazeBkgd(app, canvas)
     drawGraph(app, canvas, app.mazeGraph)
@@ -440,12 +467,15 @@ def mazeMode_redrawAll(app, canvas):
 
     # print(app.mazePlayer.row, app.mazePlayer.col)
     drawEnemies(app, canvas)
+    drawMazeLavas(app, canvas)
     # for debugging path-finding of enemy
-    for enemy in app.mazeEnemies:
-        for (row, col) in enemy.path:
-            drawCell(app, canvas, row, col, "red")
+    # for enemy in app.mazeEnemies:
+    #     for (row, col) in enemy.path:
+    #         drawCell(app, canvas, row, col, "red")
     for i in range(app.totalRooms):
         drawDoor(app, canvas, i)
+    # draw health potion
+    drawHealthBooster(app, canvas)
     # draw map border
     canvas.create_rectangle(app.margin, app.margin, app.gridWidth+app.margin, 
                     app.gridHeight+app.margin, width=2)
@@ -561,6 +591,7 @@ def roomMode_timerFired(app):
         if app.currRoom.door.checkCollision(app.player):
             print("Congrats! Going back to maze...")
             app.mode = "mazeMode"
+            app.mazePlayer.health = app.player.health
 
 def roomMode_keyPressed(app, event):
     playerControls(app, event, app.player)
@@ -625,11 +656,18 @@ def drawDoor(app, canvas, doorNum=None):
     canvas.create_image(cx, cy, image=sprite)
 
 def drawHealthBooster(app, canvas):
-    if not app.currRoom.healthBooster.collected:
-        sprite = app.healthBoosterSprite
-        x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.healthBooster.row, app.currRoom.healthBooster.col) )
-        cx, cy = (x0+x1)//2, (y0+y1)//2
-        canvas.create_image(cx, cy, image=sprite)
+    if app.mode == "roomMode":
+        if not app.currRoom.healthBooster.collected:
+            sprite = app.healthBoosterSprite
+            x0, y0, x1, y1 = getCellBounds(app, (app.currRoom.healthBooster.row, app.currRoom.healthBooster.col) )
+            cx, cy = (x0+x1)//2, (y0+y1)//2
+            canvas.create_image(cx, cy, image=sprite)
+    elif app.mode == "mazeMode":
+        if not app.mazeHealthBooster.collected:
+            sprite = app.healthBoosterSprite
+            x0, y0, x1, y1 = getCellBounds(app, (app.mazeHealthBooster.row, app.mazeHealthBooster.col) )
+            cx, cy = (x0+x1)//2, (y0+y1)//2
+            canvas.create_image(cx, cy, image=sprite)
 
 def drawTimeFreezer(app, canvas):
     if not app.currRoom.timeFreezer.collected:
