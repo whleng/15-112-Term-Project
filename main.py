@@ -256,6 +256,7 @@ def drawEnemies(app, canvas):
         x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
     if app.mode != "mazeMode":
         for enemy in enemyList:
+            x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
             drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
 
     # draw basic enemy
@@ -281,7 +282,7 @@ def initMazeModeParams(app):
     # app.mazeGraph, app.newWallsForMaze = kruskal(app, "maze")
     app.mazeGraph = prim(app)
     app.mazeGraph = removeDeadEnds(app, app.mazeGraph)
-    enemyCount = 3
+    enemyCount = 1
     # init enemies in maze
     app.mazeEnemies = []
     for _ in range(enemyCount):
@@ -311,8 +312,10 @@ def mazeMode_timerFired(app):
 
     if currTime - app.bfsStartTime > 3:
         for enemy in app.mazeEnemies:
-            enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
-                        (targetRow, targetCol) )
+            # enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
+            #             (targetRow, targetCol) )
+            enemy.path = dijksrta(app.mazeGraph, (enemy.row, enemy.col), 
+                         (targetRow, targetCol) )
             app.dfsStartTime = time.time()
 
     # enemy takes a step every interval of stepTime
@@ -417,8 +420,9 @@ def mazeMode_redrawAll(app, canvas):
     # print(app.mazePlayer.row, app.mazePlayer.col)
     drawEnemies(app, canvas)
     # for debugging path-finding of enemy
-    # for (row, col) in app.path:
-    #        drawCell(app, canvas, row, col, "red")
+    for enemy in app.mazeEnemies:
+        for (row, col) in enemy.path:
+            drawCell(app, canvas, row, col, "red")
     for i in range(app.totalRooms):
         drawDoor(app, canvas, i)
     # draw map border

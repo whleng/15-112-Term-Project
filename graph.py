@@ -317,17 +317,24 @@ def astar(graph):
 
 from queue import PriorityQueue
 
-def dijksrta():
-    allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
-    graph = Graph()
-    graph.addEdge((0,0), (0,1))
-    graph.addEdge((0,1), (1,1))
-    graph.addEdge((1,1), (1,2))
-    graph.addEdge((1,1), (2,1))
-    graph.addEdge((2,1), (2,2))
-    graph.addEdge((2,1), (2,0))
-    startNode = (0,0)
-    targetNode = (10,0)
+def dijksrta(graph, startNode, targetNode):
+    # allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
+    # graph = Graph()
+    # graph.addEdge((0,0), (0,1))
+    # graph.addEdge((0,1), (1,1))
+    # graph.addEdge((1,1), (1,2))
+    # graph.addEdge((1,1), (2,1))
+    # graph.addEdge((2,1), (2,2))
+    # graph.addEdge((2,1), (2,0))
+    # startNode = (0,0)
+    # targetNode = (2,0)
+    # # targetNode = (10,0)
+
+    allNodes = set()
+    for row in range(15):
+        for col in range(15):
+            allNodes.add( (row, col) )
+
     visited = set()
     distance = dict() 
     solution = dict()
@@ -336,22 +343,25 @@ def dijksrta():
     distance[startNode] = 0
     pq = PriorityQueue() # to be visited
     pq.put( (distance[startNode], startNode) )
-    # how to ensure that priority queue sorts by second element
     currNode = startNode
-    while currNode != targetNode:
-    # while not visited.empty():
+    # while currNode != targetNode:
+    while not pq.empty():
         weight, currNode = pq.get()
+        visited.add(currNode)
         for neighbour in graph.getNeighbours(currNode):
             if neighbour not in visited:
                 edge = graph.getEdge(currNode, neighbour)
-                if distance[currNode] + edge < distance[neighbour]:
+                newDist = distance[currNode] + edge
+                if newDist < distance[neighbour]:
                     # if neighbour in pq: 
-                    distance[neighbour] = distance[currNode] + edge
+                    distance[neighbour] = newDist
                     pq.put( (distance[neighbour], neighbour) )
                     solution[neighbour] = currNode
                 visited.add(neighbour)
         # pq.pop( (distance[currNode], currNode) )
-    print("done")
-    print(solution)
+    solution = constructPath(solution, startNode, targetNode)
+    # print(solution)
+    if solution != []: solution.pop()
+    return solution
 
 # dijksrta()
