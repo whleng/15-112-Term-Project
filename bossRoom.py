@@ -23,14 +23,12 @@ class State(object):
 
 class idleState(State):
     def on_event(self, app, event):
-        # print("idle")
         if event == "player moves":
             return attackState()
         return self
 
 class attackState(State):
     def on_event(self, app, event):
-        # print("attack")
         if event == "low health" or event == "player attacks":
             return defendState()
         # shoot at player
@@ -39,7 +37,6 @@ class attackState(State):
             
 class defendState(State):
     def on_event(self, app, event):    
-        # print("defend")        
         if event == "player moves":
             return attackState()
         # move away from player
@@ -70,7 +67,6 @@ def defend(app):
     app.boss.shield = True
     for bullet in app.player.bullets:
         if isInRange(app, bullet, app.boss):
-            # print(bullet.dir)
             stepDir = random.choice([1,-1])
             if bullet.dir[0] != 0: # (1,0) or (-1,0) horizontal movement
                 if app.boss.y > app.rows-cornerThresh:
@@ -129,7 +125,6 @@ def isLegalMove(app, playerRow, playerCol, prevPlayerRow=None, prevPlayerCol=Non
             0 <= playerCol < app.cols)
 
 def convertDirections(app, dir):
-    # print(dir)
     if dir in app.directions: # in drow, dcol form
         return app.arrowKeys[app.directions.index(dir)]
     elif dir in app.arrowKeys: # in arrow key form
@@ -152,17 +147,4 @@ def createBossRoomObstacles(app):
     app.barrelCoords.remove( (0,0) )
     app.barrelCoords.remove( (app.boss.y, app.boss.x) )
 
-    
-###############################################################
-
-# other physics elements for fighting player
-
-# determines the final position of two objects after collision
-def collision(a, b):
-    totalMomentum = a.mass * a.speed - b.mass * b.speed 
-    totalKE = 0.5*a.mass*a.speed**2 + 0.5*b.mass*b.speed**2
-    # aFinalSpeed, bFinalSpeed 
-    pass
-
-def modifySpeed(playerSpeed, playerDirection, windSpeed):
-    pass
+  

@@ -10,17 +10,9 @@ import time
 class Player(object):
     def __init__(self, health=100, items=dict()):
         self.row, self.col = 0, 0
-        self.color = "blue"
         self.health = health
-        self.speed = 10 
-        self.xp = 10
-        self.items = items
         self.bullets = []
         self.dir = (0,1)
-        self.spriteSheet = []
-
-    def jump(self):
-        pass 
 
     # generate bullets in self.dir
     def attack(self):
@@ -32,16 +24,7 @@ class Enemy(object):
         self.row, self.col = row, col
         self.dir = (0,1)
         self.health = 100
-        self.color = "red"
         self.path = []
-        self.spriteSheet = []
-
-    # # previous basic follow player code 
-    # def followPlayer(self, playerRow, playerCol):
-    #     if self.row > playerRow: self.row -= 1
-    #     elif self.row < playerRow: self.row += 1
-    #     if self.col > playerCol: self.col -= 1
-    #     elif self.col < playerCol: self.col += 1
 
     def checkCollision(self, target):
         if self.row == target.row and self.col == target.col:
@@ -60,7 +43,7 @@ class Bullet(object):
         self.spriteSheet = []
 
     def checkCollision(self, target):
-        loss = 10 #
+        loss = 10 
         try:
             if self.row == target.row and self.col == target.col:
                 target.health -= loss
@@ -72,10 +55,7 @@ class Bullet(object):
                 print(target.health)
         return target
 
-# lava will be generated from the boss, 
-# path path finds itself to player
-# lava disappears after 5s
-# player dies if it touches lava
+# lava generated from boss, path finds itself to player, disappears after some time
 class Lava(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
@@ -87,7 +67,6 @@ class Lava(object):
         loss = 20 #
         if self.row == target.row and self.col == target.col:
             target.health -= loss
-            # print(target.health)
             lavaList.remove(self)
         return target
 

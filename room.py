@@ -17,7 +17,6 @@ def createWalls(app, board):
             wallSet, wallSetCoords = result
             walls = walls.union(wallSet)
             wallsCoords = wallsCoords.union(wallSetCoords)
-            # print("here", walls)
     return walls, wallsCoords
 
 
@@ -34,7 +33,6 @@ def placeWall(app, row, col, board, wallsCoords):
             dir = random.choice(directions)
             wallList = checkEmptyFromDirection(app, row, col, 
                         board, dir, wallSetSize, wallsCoords)
-            # print(wallList)
             if wallList != None:
                 for (wallRow, wallCol) in wallList:
                     wallSetCoords.add( (wallRow, wallCol) )
@@ -55,7 +53,6 @@ def checkEmptyFromDirection(app, row, col, board, dir, wallSetSize, wallsCoords)
     for i in range(-1, wallSetSize+2):
         newRow = row + drow * i
         newCol = col + dcol * i
-        # print(newRow, newCol)
         if not checkCellEmpty(app, newRow, newCol, board, wallsCoords): 
             return None
         if i < wallSetSize: wallList.add( (newRow, newCol) )

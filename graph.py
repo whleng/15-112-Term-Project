@@ -60,16 +60,13 @@ def dfs(graph, startNode, targetNode): # does not find shortest path
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
     if solution != []: solution.pop()
-    # print("sol:", solution)
     return solution # a list of coordinates
 
 # returns a list containing (row, col) positions of path
 def constructPath(solution, startNode, targetNode): 
-    print(solution)
     currNode = targetNode
     path = [currNode]
     while True:
-        # print(startNode, currNode)
         if currNode == startNode: break
         prevNode = solution[currNode]    
         path.append(prevNode)
@@ -88,8 +85,6 @@ def solve(startNode, targetNode, graph, visited, solution):
             if tempsol != None: return tempsol
             solution[neighbour] = None
     return None
-
-# dfs() # uncomment to test dfs
 
 
 ##############################################################################
@@ -111,7 +106,6 @@ def bfs(graph, startNode, targetNode):
     q.put(startNode) 
     currNode = startNode
     while currNode != targetNode:
-        # print(currNode)
         currNode = q.get()
         visited.add(currNode)
         for neighbour in graph.getNeighbours(currNode):
@@ -120,7 +114,6 @@ def bfs(graph, startNode, targetNode):
                 q.put(neighbour)
                 visited.add(neighbour)
     solution = constructPath(solution, startNode, targetNode)
-    # print(solution)
     if solution != []: solution.pop()
     return solution
 
@@ -361,7 +354,7 @@ def createAllNodes(app):
     return allNodes
 
 def euclideanDistance(nodeA, nodeB):
-    return ((nodeA[0]-nodeB[0]) + (nodeA[1]-nodeB[1]))
+    return math.sqrt((nodeA[0]-nodeB[0])**2 + (nodeA[1]-nodeB[1])**2)
 
 def aStar(graph, startNode, targetNode, allNodes):
     visited = set()
@@ -386,7 +379,10 @@ def aStar(graph, startNode, targetNode, allNodes):
                     pq.put( (cost[neighbour], neighbour) )
                     solution[neighbour] = currNode
                 visited.add(neighbour)
-    solution = constructPath(solution, startNode, targetNode)
+    try:
+        solution = constructPath(solution, startNode, targetNode)
+    except:
+        solution = []
     if solution != []: solution.pop()
     return solution
 

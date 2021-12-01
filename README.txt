@@ -15,6 +15,7 @@ No additional libraries are required to be installed.
 
 <h2> Shortcut Commands </h2>
 Press B to enter boss mode, skipping remaining rooms
+Press K in the splashscreen page before pressing the start button to generate the main maze using Kruskal's algorithm, else it use Prim's algorithm by default.
 
 <h2> Instructions </h2>
 

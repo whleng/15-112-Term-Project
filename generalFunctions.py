@@ -62,7 +62,6 @@ def createRoomGraph(app, wallsCoords):
                 _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
                 for neighbour in neighbours: 
                     if neighbour not in wallsCoords: # if neighbour is not a wall
-                        # print("neighbour: ", neighbour)
                         graph.addEdge(cell, neighbour) 
     return graph
 
@@ -73,14 +72,12 @@ def createRoomGraph(app, wallsCoords):
 
 # takes in the character and returns the current sprite to be used
 def getSpriteInFrame(app, character, sprites, spriteCounter):
-    # print("here", character.dir)
     try:
         sprite = sprites[convertDirections(app, character.dir)][spriteCounter]
     except:
         sprite = sprites["Right"][spriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (character.row, character.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     return sprite, cx, cy
 
 
@@ -89,7 +86,6 @@ def processSprite(app, path):
     _, imageHeight = sprite.size
     spriteHeightFactor = app.cellHeight / imageHeight
     scaledsprite = app.scaleImage(sprite, spriteHeightFactor)
-    # sprite = sprite.resize( (int(app.cellWidth), int(app.cellHeight)) )
     return ImageTk.PhotoImage(scaledsprite)
 
 

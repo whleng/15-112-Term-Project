@@ -56,9 +56,7 @@ def loadSplashscreen(app):
     bkgd = app.loadImage(r"Graphics/dungeon.jpg")
     imageWidth, imageHeight = bkgd.size
     imagecx, imagecy = imageWidth//2, imageHeight//2
-    # print(imagecx, imagecy) 
     cropCoords = imagecx-app.cx, imagecy-app.cy, imagecx+app.cx, imagecy+app.cy
-    # print(cropCoords)
     return bkgd.crop(cropCoords)
 
 def drawSplashscreen(app, canvas):
@@ -70,12 +68,7 @@ def createButtons(app):
     app.startButton = cx-width, cy-height, cx+width, cy+height
 
 def drawButtons(app, canvas):
-    # start button, help button
-
-    # bkgd = app.loadImage(r"Graphics/dungeon.jpg")
-    # imageWidth, imageHeight = bkgd.size
-    # imagecx, imagecy = imageWidth//2, imageHeight//2
-    # canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.splashscreen))
+    # start button
     cx, cy = app.cx, app.cy * 2/3
     canvas.create_rectangle(app.startButton, fill="brown")
     canvas.create_text(cx, cy, text="Start Game", font="{Century Schoolbook}", fill="white")
@@ -83,7 +76,6 @@ def drawButtons(app, canvas):
 def splashscreenMode_mousePressed(app, event):
     x0, y0, x1, y1 = app.startButton
     if x0 < event.x < x1 and y0 < event.y < y1:
-        # print("changed")
         app.mode = "mazeMode"
         initMazeModeParams(app)
         initRoomModeParams(app)
@@ -91,7 +83,6 @@ def splashscreenMode_mousePressed(app, event):
 def splashscreenMode_keyPressed(app, event):
     if event.key == "k":
         app.mazeChoice = "kruskal"
-        print("kruskal")
 
 def splashscreenMode_redrawAll(app, canvas):
     drawSplashscreen(app, canvas)
@@ -154,10 +145,6 @@ def initSprites(app):
                     21, 13, range(8,12), 9)
     app.playerSpriteCounter = 0
     
-    # app.bulletSprite = app.loadImage(r"Graphics/bullets.png")
-    # app.bulletSprites = createObjectSprites(app, app.bulletSprite, 4, 4, 3)
-    # app.bulletSprites = app.bulletSprites[9:] # temporary fix  
-    # bullet sprites with 4 directions
     app.oneBulletSprites = createBulletSprites(app, "Graphics/oneBullet.png")
     
     app.wallSprite = processSprite(app, "Graphics/wall.jpg")
@@ -203,7 +190,6 @@ def createBulletSprites(app, path):
     _, imageHeight = sprite.size
     spriteHeightFactor = app.cellHeight / imageHeight
     sprite = app.scaleImage(sprite, spriteHeightFactor)
-    # sprite = sprite.resize( (int(app.cellWidth), int(app.cellHeight)) )
     sprites = {'Left': [], 'Right': [], 'Up': [], 'Down': []} 
     sprites["Right"] = ImageTk.PhotoImage(sprite)
     # down       
@@ -247,16 +233,10 @@ def drawPlayer(app, canvas):
     sprite = app.playerSprites[convertDirections(app, player.dir)][app.playerSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (player.row, player.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    
-    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=sprite)
     # health bar
-    # if app.mode != "mazeMode":
     drawHealthBar(app, canvas, player, x0, y0, x1, y1)
     
-    # # draw basic player
-    # drawCell(app, canvas, app.player.row, app.player.col, app.player.color)
-
 def drawEnemies(app, canvas):
     # draw sprite
     if app.mode == "mazeMode":
@@ -282,12 +262,6 @@ def drawEnemies(app, canvas):
             x0, y0, x1, y1 = getCellBounds(app, (enemy.row, enemy.col) )
             drawHealthBar(app, canvas, enemy, x0, y0, x1, y1)
 
-    # draw basic enemy
-    # enemy = app.enemy 
-    # drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
-    # for enemy in app.roomEnemies:
-    #    drawCell(app, canvas, enemy.row, enemy.col, enemy.color)
-
 # draws one cell according to its row and col position
 def drawCell(app, canvas, row, col, cellColor):
     x = app.margin + col * app.cellWidth
@@ -302,7 +276,6 @@ def drawCell(app, canvas, row, col, cellColor):
 def initMazeModeParams(app):
     # init general 
     app.mazePlayer = Player()
-    # app.mazeGraph, app.newWallsForMaze = kruskal(app, "maze")
     if app.mazeChoice == "prim":
         app.mazeGraph = prim(app)
     elif app.mazeChoice == "kruskal":
@@ -329,16 +302,6 @@ def initMazeModeParams(app):
     row, col = random.randint(5, app.rows-1), random.randint(5, app.cols-1)
     app.mazeHealthBooster = HealthBooster(row, col)
 
-
-# create collectable items in maze mode
-# def createItemsInMaze(app):
-#     totalItems = 3
-#     app.mazeItems = []
-#     for i in range(totalItems):
-#         row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1))
-#         item = HealthBooster(row, col)
-#         app.mazeItem.append(item)
-
 def mazeMode_timerFired(app):
     player = app.mazePlayer
     currTime = time.time()
@@ -352,14 +315,14 @@ def mazeMode_timerFired(app):
         app.mazePlayer = lava.checkCollision(app.mazePlayer, app.mazeLavas)
         if app.mazePlayer.health < 0:
             app.mode = "loseMode"
+
     # enemy code
     # enemy recalculates path every 3s
     targetRow, targetCol = app.mazePlayer.row, app.mazePlayer.col
 
+    # vary path finding algorithm for different enemies
     if currTime - app.bfsStartTime > 3:
         for enemy in app.mazeEnemies:
-            # enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
-            #             (targetRow, targetCol) )
             if app.mazeEnemies.index(enemy) % 2 == 0:
                 enemy.path = aStar(app.mazeGraph, (enemy.row, enemy.col), 
                             (targetRow, targetCol), app.mazeAllNodes)
@@ -375,8 +338,6 @@ def mazeMode_timerFired(app):
                 prevRow, prevCol = enemy.row, enemy.col
                 enemy.row, enemy.col = enemy.path.pop()
                 enemy.dir = (enemy.row - prevRow, enemy.col - prevCol)
-                # print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
-                # print("moved", enemy.row, enemy.col)
                 if enemy.checkCollision(app.mazePlayer): 
                     app.mazePlayer.health -= 10
                     if app.mazePlayer.health < 0:
@@ -425,9 +386,7 @@ def drawGraph(app, canvas, graph):
         visitedCells.add(node)
         _, neighbours = getNeighbours(app, app.rows, app.cols, 
                             node[0], node[1], visitedCells)
-        # print(neighbours)
         for neighbour in neighbours:
-            # print(neighbour)
             # if neighbour does not have a connected edge to the node
             if (node not in graph.table or 
                 neighbour not in graph.getNeighbours(node)):
@@ -457,9 +416,7 @@ def drawPortal(app, canvas):
     sprite = app.portalSprites[app.portalSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (app.portal.row, app.portal.col) )
     cx, cy = (x0+x1)//2, (y0+y1)//2
-    # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
     canvas.create_image(cx, cy, image=sprite)
-    # drawCell(app, canvas, app.portal.row, app.portal.col, "purple")
 
 def drawMazeBkgd(app, canvas):
     canvas.create_image(app.cx, app.cy, image=app.mazeBkgd)
@@ -474,19 +431,9 @@ def drawMazeLavas(app, canvas):
 def mazeMode_redrawAll(app, canvas):
     drawMazeBkgd(app, canvas)
     drawGraph(app, canvas, app.mazeGraph)
-
-    # for row,col in app.newWallsForMaze:
-    #     drawCell(app, canvas, row, col, "yellow")
-
-    # print(app.mazePlayer.row, app.mazePlayer.col)
     drawMazeLavas(app, canvas)
-    # for debugging path-finding of enemy
-    # for enemy in app.mazeEnemies:
-    #     for (row, col) in enemy.path:
-    #         drawCell(app, canvas, row, col, "red")
     for i in range(app.totalRooms):
         drawDoor(app, canvas, i)
-    # draw health potion
     drawHealthBooster(app, canvas)
     # draw map border
     canvas.create_rectangle(app.margin, app.margin, app.gridWidth+app.margin, 
@@ -547,12 +494,12 @@ def roomMode_timerFired(app):
     for enemy in app.currRoom.roomEnemies:
         targetRow, targetCol = app.player.row, app.player.col
 
+        # if invisible item collected, slow down enemies
         if (app.currRoom.invisibilityPotion.collected and 
             currTime - app.currRoom.invisibilityPotion.collectedTime < 15):
             if app.currRoom.invisibilityPotion.used == False:
                 (row, col) = createObjectInRoom(app, app.currRoom.occupiedCoords)
                 app.tempPlayerRow, app.tempPlayerCol = (row, col)
-                print(row,col)
                 app.currRoom.invisibilityPotion.used = True
             targetRow, targetCol = app.tempPlayerRow, app.tempPlayerCol
 
@@ -573,8 +520,6 @@ def roomMode_timerFired(app):
                 prevRow, prevCol = enemy.row, enemy.col
                 enemy.row, enemy.col = enemy.path.pop()
                 enemy.dir = (enemy.row - prevRow, enemy.col - prevCol)
-                # print(prevRow, prevCol, enemy.row, enemy.col, enemy.dir)
-                # print("moved", enemy.row, enemy.col)
         app.startTime = time.time()
 
     # check if enemy attacked player
@@ -582,16 +527,13 @@ def roomMode_timerFired(app):
         if enemy.checkCollision(app.player):
             app.player.health -= 10
             if app.player.health < 0: 
-                print("GAME OVER!")
                 app.mode = "loseMode"
 
     # check if player attacked enemy
     for bullet in app.player.bullets:
-        # print("bullet:", bullet)
         drow, dcol = bullet.dir
         bullet.row += drow
         bullet.col += dcol 
-        # bullet.spriteCounter = (1 + bullet.spriteCounter) % len(app.bulletSprites)
         if (bullet.row < 0 or bullet.row >= app.rows or
             bullet.col < 0 or bullet.col >= app.cols):
             app.player.bullets.remove(bullet) 
@@ -629,23 +571,13 @@ def drawRoomWalls(app, canvas):
     for wallCoord in app.currRoom.wallsCoords:
         x0, y0, x1, y1 = getCellBounds(app, wallCoord)
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        # imageWidth, imageHeight = app.wallSprite.size
-        # scaleFactor =  (x1-x0) / imageWidth 
-        # print(scaleFactor)
-        # wallSprite = app.scaleImage(app.wallSprite, scaleFactor)
         canvas.create_image(cx, cy, image=app.wallSprite)
-
-        # draw wall as a circle, loop through wall in walls
-        # drawCell(app, canvas, wall.row, wall.col, wall.color)
 
 def drawBullets(app, canvas):
     for bullet in app.player.bullets:
-        # sprite = app.bulletSprites[bullet.spriteCounter]
         sprites = app.oneBulletSprites
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
-        # default: travelling right
         if bullet.dir == (1,0): # down
             bulletDir = "Down"
         elif bullet.dir == (-1,0): # up
@@ -656,7 +588,6 @@ def drawBullets(app, canvas):
             bulletDir = "Right"
         canvas.create_image(cx, cy, image=sprites[bulletDir])
 
-    # drawCell(app, canvas, bullet.row, bullet.col, "yellow")
 
 def drawDoor(app, canvas, doorNum=None):
     sprite = app.openedDoorSprite
@@ -705,7 +636,6 @@ def drawRoomBkgd(app, canvas):
     canvas.create_image(app.cx, app.cy, image=app.roomBkgd)
 
 def roomMode_redrawAll(app, canvas):
-    # drawBoard(app, canvas)
     drawRoomBkgd(app, canvas)
     drawRoomWalls(app, canvas)
     drawPlayer(app, canvas)
@@ -796,11 +726,9 @@ def bossMode_timerFired(app):
 
 def drawBossRoomBullets(app, canvas):
     for bullet in app.player.bullets:
-        # sprite = app.bulletSprites[bullet.spriteCounter]
         sprites = app.oneBulletSprites
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         # default: travelling right
         if bullet.dir == (1,0): # down
             bulletDir = "Down"
@@ -813,11 +741,9 @@ def drawBossRoomBullets(app, canvas):
         canvas.create_image(cx, cy, image=sprites[bulletDir])
     
     for bullet in app.boss.bullets:
-        # sprite = app.bulletSprites[bullet.spriteCounter]
         sprites = app.oneBulletSprites
         x0, y0, x1, y1 = getCellBounds(app, (bullet.row, bullet.col) )
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        # sprite = sprite.resize( (int(x1-x0), int(y1-y0)) )
         # default: travelling right
         if bullet.dir == (1,0): # down
             bulletDir = "Down"
@@ -835,14 +761,8 @@ def drawBossRoomBullets(app, canvas):
         cx, cy = (x0+x1)//2, (y0+y1)//2
         canvas.create_image(cx, cy, image=sprite)
 
-    # for bullet in app.player.bullets:
-    #     drawCell(app, canvas, bullet.row, bullet.col, "yellow")
-
-    # for bullet in app.boss.bullets:
-    #     drawCell(app, canvas, bullet.row, bullet.col, "yellow")
-
 def drawBoss(app, canvas):
-    # static image of boss right now
+    # static image of boss 
     scale = 3 
     sprite = app.bossSprites["Down"][app.bossSpriteCounter]
     x0, y0, x1, y1 = getCellBounds(app, (app.boss.y, app.boss.x) )
@@ -852,17 +772,10 @@ def drawBoss(app, canvas):
 
     drawHealthBar(app, canvas, app.boss, x0, y0, x1, y1)
     
-    # drawCell(app, canvas, app.boss.y, app.boss.x, "green")
-
-
 def drawObstacles(app, canvas):
     for barrelCoord in app.barrelCoords:
         x0, y0, x1, y1 = getCellBounds(app, barrelCoord)
         cx, cy = (x0+x1)//2, (y0+y1)//2
-        # imageWidth, imageHeight = app.barrelSprite.size
-        # scaleFactor =  (x1-x0) / imageWidth 
-        # print(scaleFactor)
-        # barrelSprite = app.scaleImage(app.barrelSprite, scaleFactor)
         canvas.create_image(cx, cy, image=app.barrelSprite)
     
 
@@ -870,7 +783,6 @@ def bossMode_redrawAll(app, canvas):
     drawMazeBkgd(app, canvas)
     print(app.gameEvent)
     drawObstacles(app, canvas)
-    # drawBoard(app, canvas)
     drawPlayer(app, canvas)
     drawBossRoomBullets(app, canvas)
     drawBoss(app, canvas)
