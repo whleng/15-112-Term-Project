@@ -2,6 +2,11 @@ import random
 from objects import *
 from cmu_112_graphics import * 
 
+#########################################################
+# bossRoom.py
+# This file contains the functions and objects relevant to the boss room
+#########################################################
+
 ##################################################################
 # INIT BOSS
 ##################################################################

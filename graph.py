@@ -1,6 +1,13 @@
 from cmu_112_graphics import *
 
 
+#########################################################
+# graph.py
+# This file contains the graph object and graph algorithms for 
+# maze generation and path-finding
+#########################################################
+
+
 ##############################################################################
 # GRAPH OBJECTS
 ##############################################################################
@@ -36,12 +43,6 @@ class Graph(object):
             return set(self.table[node])
         except:
             return set()
-
-# have yet to integrate the node as an object  
-class Node(object):
-    def __init__(self, row, col):
-        self.row = row
-        self.col = col
 
 
 ##############################################################################

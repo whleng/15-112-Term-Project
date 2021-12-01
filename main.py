@@ -7,6 +7,11 @@ from generalFunctions import *
 import time
 
 #########################################################
+# main.py
+# This file contains all the main functions of the project
+# including the animation functions
+# Run this file to start the game
+#########################################################
 
 WIDTH = 800
 HEIGHT = 800
@@ -22,18 +27,19 @@ def gameDimensions():
 
 def appStarted(app):
     app.mode = "splashscreenMode" 
-    # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
+    # modes: mazeMode, roomMode, bossMode, splashscreenMode, 
+    # winMode, loseMode
     app.winGame = None
     app.mazeChoice = "prim"
 
-    initGeneralParams(app) # time, width/height of cells
+    initGeneralParams(app) 
     initSprites(app)
     initBackgrounds(app)
 
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
-
+        
     elif app.mode == "mazeMode":
         
         initMazeModeParams(app)
@@ -76,9 +82,9 @@ def drawButtons(app, canvas):
 def splashscreenMode_mousePressed(app, event):
     x0, y0, x1, y1 = app.startButton
     if x0 < event.x < x1 and y0 < event.y < y1:
-        app.mode = "mazeMode"
         initMazeModeParams(app)
         initRoomModeParams(app)
+        app.mode = "mazeMode"
 
 def splashscreenMode_keyPressed(app, event):
     if event.key == "k":
@@ -324,7 +330,7 @@ def mazeMode_timerFired(app):
     if currTime - app.bfsStartTime > 3:
         for enemy in app.mazeEnemies:
             if app.mazeEnemies.index(enemy) % 2 == 0:
-                enemy.path = aStar(app.mazeGraph, (enemy.row, enemy.col), 
+                enemy.path = dijkstra(app.mazeGraph, (enemy.row, enemy.col), 
                             (targetRow, targetCol), app.mazeAllNodes)
             else:
                 enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
@@ -494,17 +500,15 @@ def roomMode_timerFired(app):
     for enemy in app.currRoom.roomEnemies:
         targetRow, targetCol = app.player.row, app.player.col
 
-        # if invisible item collected, slow down enemies
+        # if invisible item collected, enemies keep player's last known position
         if (app.currRoom.invisibilityPotion.collected and 
-            currTime - app.currRoom.invisibilityPotion.collectedTime < 15):
+            (currTime - app.currRoom.invisibilityPotion.collectedTime) < 10):
             if app.currRoom.invisibilityPotion.used == False:
                 (row, col) = createObjectInRoom(app, app.currRoom.occupiedCoords)
                 app.tempPlayerRow, app.tempPlayerCol = (row, col)
                 app.currRoom.invisibilityPotion.used = True
             targetRow, targetCol = app.tempPlayerRow, app.tempPlayerCol
-
         if currTime - app.bfsStartTime > 3:
-            targetRow, targetCol = app.player.row, app.player.col
             if app.currRoom.roomEnemies.index(enemy) % 2 == 0:
                 enemy.path = aStar(app.currRoom.roomGraph, (enemy.row, enemy.col), 
                          (targetRow, targetCol), app.currRoom.roomAllNodes)

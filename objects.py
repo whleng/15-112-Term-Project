@@ -3,6 +3,11 @@ from generalFunctions import *
 import time
 
 
+#########################################################
+# objects.py
+# This file contains the classes for the various objects used in the game
+#########################################################
+
 ################################################################
 # Character Objects
 ################################################################
@@ -142,13 +147,13 @@ class InvisibilityPotion(object):
     def __init__(self, row, col):
         self.row, self.col = row, col
         self.collected = False
-        self.collectedTime = time.time()
         self.used = False
 
     def checkCollision(self, target):
         if (self.row == target.row and self.col == target.col 
             and self.collected == False):
             self.collected = True
+            self.collectedTime = time.time()
             return True
         return False
 

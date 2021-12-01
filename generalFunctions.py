@@ -1,6 +1,13 @@
 import random
 from graph import *
 
+
+#########################################################
+# generalFunctions.py
+# This file contains the general functions required to support 
+# the main app
+#########################################################
+
 #########################################################
 # GENERAL FUNCTIONS
 #########################################################

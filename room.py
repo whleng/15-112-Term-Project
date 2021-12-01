@@ -5,6 +5,11 @@ from objects import *
 from cmu_112_graphics import *
 
 
+#########################################################
+# room.py
+# This file contains the functions and objects specific to room generation
+#########################################################
+
 # generates a walls in sets of 4 blocks
 def createWalls(app, board):
     wallCount = 50
