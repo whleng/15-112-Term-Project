@@ -8,8 +8,8 @@ import time
 
 #########################################################
 
-WIDTH = 640
-HEIGHT = 640
+WIDTH = 800
+HEIGHT = 800
 
 def gameDimensions():
     rows, cols, margin = 15, 15, 20  
@@ -24,6 +24,7 @@ def appStarted(app):
     app.mode = "splashscreenMode" 
     # modes: mazeMode, roomMode, bossMode, splashscreenMode, winMode, loseMode
     app.winGame = None
+    app.mazeChoice = "prim"
 
     initGeneralParams(app) # time, width/height of cells
     initSprites(app)
@@ -32,10 +33,9 @@ def appStarted(app):
     if app.mode == "splashscreenMode":
         app.splashscreen = loadSplashscreen(app)
         createButtons(app)
-        initMazeModeParams(app)
-        initRoomModeParams(app)
 
     elif app.mode == "mazeMode":
+        
         initMazeModeParams(app)
         initRoomModeParams(app)
 
@@ -85,6 +85,13 @@ def splashscreenMode_mousePressed(app, event):
     if x0 < event.x < x1 and y0 < event.y < y1:
         # print("changed")
         app.mode = "mazeMode"
+        initMazeModeParams(app)
+        initRoomModeParams(app)
+
+def splashscreenMode_keyPressed(app, event):
+    if event.key == "k":
+        app.mazeChoice = "kruskal"
+        print("kruskal")
 
 def splashscreenMode_redrawAll(app, canvas):
     drawSplashscreen(app, canvas)
@@ -296,7 +303,10 @@ def initMazeModeParams(app):
     # init general 
     app.mazePlayer = Player()
     # app.mazeGraph, app.newWallsForMaze = kruskal(app, "maze")
-    app.mazeGraph = prim(app)
+    if app.mazeChoice == "prim":
+        app.mazeGraph = prim(app)
+    elif app.mazeChoice == "kruskal":
+        app.mazeGraph, _ = kruskal(app, "maze")
     app.mazeGraph = removeDeadEnds(app, app.mazeGraph)
     app.mazeAllNodes = createAllNodes(app)
     enemyCount = 3
@@ -351,8 +361,8 @@ def mazeMode_timerFired(app):
             # enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
             #             (targetRow, targetCol) )
             if app.mazeEnemies.index(enemy) % 2 == 0:
-                enemy.path = dijkstra(app.mazeGraph, (enemy.row, enemy.col), 
-                         (targetRow, targetCol), app.mazeAllNodes)
+                enemy.path = aStar(app.mazeGraph, (enemy.row, enemy.col), 
+                            (targetRow, targetCol), app.mazeAllNodes)
             else:
                 enemy.path = bfs(app.mazeGraph, (enemy.row, enemy.col), 
                          (targetRow, targetCol) )
@@ -399,6 +409,9 @@ def mazeMode_timerFired(app):
     
 def mazeMode_keyPressed(app, event):
     playerControls(app, event, app.mazePlayer)
+    if event.key == "b":
+        initBossModeParams(app)
+        app.mode = "bossMode"
 
 # draw grid based on graph
 def drawGraph(app, canvas, graph):
@@ -466,7 +479,6 @@ def mazeMode_redrawAll(app, canvas):
     #     drawCell(app, canvas, row, col, "yellow")
 
     # print(app.mazePlayer.row, app.mazePlayer.col)
-    drawEnemies(app, canvas)
     drawMazeLavas(app, canvas)
     # for debugging path-finding of enemy
     # for enemy in app.mazeEnemies:
@@ -479,8 +491,10 @@ def mazeMode_redrawAll(app, canvas):
     # draw map border
     canvas.create_rectangle(app.margin, app.margin, app.gridWidth+app.margin, 
                     app.gridHeight+app.margin, width=2)
-    if app.completedRooms: drawPortal(app, canvas)
+    if app.completedRooms: 
+        drawPortal(app, canvas)
     drawPlayer(app, canvas)
+    drawEnemies(app, canvas)
 
 #########################################################
 # ROOM MODE 
@@ -502,9 +516,9 @@ def initRoomModeParams(app):
     app.doors = []
     
     for i in range(app.totalRooms):
-        row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
+        row, col = random.randint(5, app.rows-1), random.randint(5, app.cols-1)
         while (row, col) in app.doorCoords:
-            row, col = random.randint(0, app.rows-1), random.randint(0, app.cols-1)
+            row, col = random.randint(5, app.rows-1), random.randint(5, app.cols-1)
         door = Door(row, col, i)
         app.doors.append(door)
         app.doorCoords.append( (row,col) )
@@ -595,6 +609,9 @@ def roomMode_timerFired(app):
 
 def roomMode_keyPressed(app, event):
     playerControls(app, event, app.player)
+    if event.key == "b":
+        initBossModeParams(app)
+        app.mode = "bossMode"
 
 #####################################################
 # Drawing Functions
@@ -868,9 +885,20 @@ def winMode_redrawAll(app, canvas):
     canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.winModeImage))
     canvas.create_text(app.width//2, app.height//2, text="YOU HAVE ESCAPED!", font="Arial 30", fill="white")
 
+def winMode_keyPressed(app, event):
+    if event.key == "r":
+        app.mode = "splashScreenMode"
+        appStarted(app)
+
 def loseMode_redrawAll(app, canvas):
     
     canvas.create_image(app.cx, app.cy, image=ImageTk.PhotoImage(app.loseModeImage))
     canvas.create_text(app.width//2, app.height//2, text="GAME OVER!", font="Arial 30", fill="white")
+
+
+def loseMode_keyPressed(app, event):
+    if event.key == "r":
+        app.mode = "splashScreenMode"
+        appStarted(app)
 
 runApp(width=WIDTH, height=HEIGHT)

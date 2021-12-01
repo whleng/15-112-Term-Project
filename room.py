@@ -105,7 +105,7 @@ class Room(object):
                          (targetRow, targetCol), self.roomAllNodes)
             else:
                 enemy.path = bfs(self.roomGraph, (enemy.row, enemy.col), 
-                         (targetRow, targetCol) )
+                        (targetRow, targetCol) )
         
         self.enemyStepTime = 0.5
 

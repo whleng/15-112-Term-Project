@@ -60,16 +60,18 @@ def dfs(graph, startNode, targetNode): # does not find shortest path
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
     if solution != []: solution.pop()
-    print("sol:", solution)
+    # print("sol:", solution)
     return solution # a list of coordinates
 
 # returns a list containing (row, col) positions of path
 def constructPath(solution, startNode, targetNode): 
+    print(solution)
     currNode = targetNode
     path = [currNode]
     while True:
+        # print(startNode, currNode)
         if currNode == startNode: break
-        prevNode = solution[currNode] 
+        prevNode = solution[currNode]    
         path.append(prevNode)
         currNode = prevNode
     return path
@@ -359,7 +361,7 @@ def createAllNodes(app):
     return allNodes
 
 def euclideanDistance(nodeA, nodeB):
-    return math.sqrt((nodeA[0]-nodeB[0])**2 + (nodeA[1]-nodeB[1])**2)
+    return ((nodeA[0]-nodeB[0]) + (nodeA[1]-nodeB[1]))
 
 def aStar(graph, startNode, targetNode, allNodes):
     visited = set()
