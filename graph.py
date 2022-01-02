@@ -1,6 +1,22 @@
 from cmu_112_graphics import *
-# referenced from TA lecture: Graph Algorithm
-# generic graph object
+
+
+#########################################################
+# graph.py
+# This file contains the graph object and graph algorithms for 
+# maze generation and path-finding
+#########################################################
+
+
+##############################################################################
+# GRAPH OBJECTS
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+
+##############################################################################
+
 class Graph(object):
     def __init__(self):
         self.table = dict() # dict storing the nodes and edges
@@ -23,35 +39,42 @@ class Graph(object):
         return list(self.table)
 
     def getNeighbours(self, node):
-        return set(self.table[node])
+        try:
+            return set(self.table[node])
+        except:
+            return set()
 
-# have yet to integrate the node as an object inside 
-class Node(object):
-    def __init__(self, row, col):
-        self.row = row
-        self.col = col
 
-# dfs works, for pathfinding, 
-# but only finds one path, not the shortest path yet
-# referenced from TA lecture: Graph Algorithm
-def dfs(graph, startNode, targetNode):
+##############################################################################
+# DEPTH FIRST SEARCH
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+
+##############################################################################
+
+# main dfs function 
+def dfs(graph, startNode, targetNode): # does not find shortest path
     visited = set()
     solution = dict()
     solution = solve(startNode, targetNode, graph, visited, solution)
     solution = constructPath(solution, startNode, targetNode)
-    print("sol:", solution)
+    if solution != []: solution.pop()
     return solution # a list of coordinates
 
+# returns a list containing (row, col) positions of path
 def constructPath(solution, startNode, targetNode): 
     currNode = targetNode
     path = [currNode]
     while True:
         if currNode == startNode: break
-        prevNode = solution[currNode] 
+        prevNode = solution[currNode]    
         path.append(prevNode)
         currNode = prevNode
     return path
 
+# recursive solve function
 def solve(startNode, targetNode, graph, visited, solution):
     if startNode == targetNode:
         return solution
@@ -59,19 +82,24 @@ def solve(startNode, targetNode, graph, visited, solution):
     for neighbour in graph.getNeighbours(startNode):
         if neighbour not in visited:
             solution[neighbour] = startNode
-            # solution.add(neighbour)
-            # print(startNode, neighbour, solution)
             tempsol = solve(neighbour, targetNode, graph, visited, solution)
             if tempsol != None: return tempsol
-            # solution.remove(neighbour)
             solution[neighbour] = None
     return None
 
-# dfs() # uncomment to test dfs
+
+##############################################################################
+# BREADTH FIRST SEARCH
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+# Queue documentation was also referenced: https://docs.python.org/3/library/queue.html
+
+##############################################################################
 
 from queue import *
 
-# referenced from TA lecture: Graph Algorithm
 def bfs(graph, startNode, targetNode):
     visited = set()
     solution = dict()
@@ -79,7 +107,6 @@ def bfs(graph, startNode, targetNode):
     q.put(startNode) 
     currNode = startNode
     while currNode != targetNode:
-        # print(currNode)
         currNode = q.get()
         visited.add(currNode)
         for neighbour in graph.getNeighbours(currNode):
@@ -88,19 +115,26 @@ def bfs(graph, startNode, targetNode):
                 q.put(neighbour)
                 visited.add(neighbour)
     solution = constructPath(solution, startNode, targetNode)
-    # print(solution)
     if solution != []: solution.pop()
     return solution
 
 # bfs() # uncomment to test dfs
 
+
+##############################################################################
+# PRIM'S ALGORITHM
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+# The following resources were also referenced:
+# - https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
+# - https://hurna.io/academy/algorithms/maze_generator/prim_s.html
+
+##############################################################################
+
 import random 
 
-# prim's algo for maze generation, works
-# can be used (within a room + whole map)
-# referenced from 
-# https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
-# and https://hurna.io/academy/algorithms/maze_generator/prim_s.html
 def prim(app):
     startNode = (0,0)
     cells = set() # set of cells
@@ -108,30 +142,23 @@ def prim(app):
     cells.add(startNode)
     graph = Graph()
     while len(cells) > 0:
-        # cell = cells.pop() # get a random cell
+        # get a random cell
         cell = random.choice(list(cells))
         cells.remove(cell)
         visited.add(cell) # mark cell as visited
         row, col = cell
-        visitedNeighbours, unvisitedNeighbours = getNeighbours(app, app.rows, app.cols, row, col, visited) 
+        visitedNeighbours, unvisitedNeighbours = getNeighbours(app, app.rows, 
+                            app.cols, row, col, visited) 
         # return visited neighbours
         if len(visitedNeighbours) > 0:
             neighbour = visitedNeighbours.pop()
             graph.addEdge(neighbour, cell) 
             # randomly connect the cell to a neighbour which has been visited
         cells = set.union(cells, unvisitedNeighbours) # add unvisited neighbour to the set
-    # to create more paths, randomly add in some edges
-    # however, adding this will cause the dfs to not work
-    # for i in range(100):
-    #     cell = random.randint(0, app.rows), random.randint(0, app.cols)
-    #     (drow, dcol) = random.choice(app.directions)
-    #     neighbour = cell[0] + drow, cell[1] + dcol
-    #     graph.addEdge(neighbour, cell)
     return graph
 
-# obtaining 4 cells connected to it 
-def getNeighbours(app, rows, cols, row, col, visited):
-    # rows, cols = len(board), len(board[0])
+# obtaining the 4 cells around a cell
+def getNeighbours(app, rows, cols, row, col, visited=set()):
     visitedNeighbours = set()
     unvisitedNeighbours = set()
     for dir in app.directions:
@@ -145,53 +172,141 @@ def getNeighbours(app, rows, cols, row, col, visited):
                 visitedNeighbours.add( (newRow, newCol))
     return visitedNeighbours, unvisitedNeighbours
 
+##############################################################################
+# NO DEAD END MAP GENERATION
+##############################################################################
 
-#################################################
-# Test Code
-#################################################
-# def appStarted(app):
-#     app.margin = 0
-#     app.rows, app.cols = 20, 20
-#     app.cellHeight, app.cellWidth = app.height / app.rows, app.width / app.cols
-#     app.directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-#     app.graph = prim(app)
-#     app.path = bfsNew(app.graph)
-#     # app.graph = Graph()
-#     # app.graph.addEdge((0,0), (0,1))
-#     # app.graph.addEdge((0,1), (1,1))
+# This self-designed algorithm uses DFS/recursion 
+# It takes an existing maze and removes the dead ends
+# Loosely referenced from TA Lecture: Graph Algorithms (Maze Generation)
+
+##############################################################################
+
+import copy
+
+def removeDeadEnds(app, graph):
+    # number of rows, cols in the map
+    # newGraph = copy.deepcopy(graph)
+    visited = set()
+    startNode = (0,0)
+    currNode = startNode
+    return removeDeadEndsHelper(app, currNode, graph, visited)    
+
+def removeDeadEndsHelper(app, currNode, graph, visited):
+    newGraph = copy.deepcopy(graph)
+    visited.add(currNode)
+    for neighbour in newGraph.getNeighbours(currNode):
+        # neighbour is not a dead end
+        if neighbour not in visited:
+            visited.add(neighbour)
+            if len(newGraph.getNeighbours(neighbour)) > 1:
+                newGraph = removeDeadEndsHelper(app, neighbour, newGraph, visited)
+            # neighbour is a dead end
+            else:
+                # find 4 cells surrounding it
+                row, col = neighbour
+                _, possibleNeighbours = getNeighbours(app, app.rows, app.cols, row, col)
+                possibleNeighbours.remove(currNode)
+                newNeighbour = random.choice(list(possibleNeighbours))
+                newGraph.addEdge(neighbour, newNeighbour)
+    return newGraph
+
+##############################################################################
+# KRUSKAL'S ALGORITHM
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithm
+
+##############################################################################
+
+# Referenced pseudocode from:
+# https://www.techiedelight.com/disjoint-set-data-structure-union-find-algorithm/
+class UFDS(object):
+    def __init__(self):
+        self.parent = dict()
+
+    def initSets(self, rows, cols):
+        for row in range(rows):
+            for col in range(cols):
+                node = row, col
+                self.parent[node] = node
+
+    def findParent(self, node):
+        if self.parent[node] == node:
+            return node
+        else: 
+            # recursively finds root
+            return self.findParent(self.parent[node])
+
+    def union(self, nodeA, nodeB):
+        # make the parent the same for both 
+        rootA = self.findParent(nodeA)
+        rootB = self.findParent(nodeB)
+        self.parent[rootA] = rootB
+
+# Referenced from TA Lecture: Graph Algorithm
+# Kruskal's can be used for maze or wall generation (in room)
+def kruskal(app, option="maze"):
+    if option == "maze":
+        minWallsCheck = 0
+    elif option == "room":
+        minWallsCheck = 820
+
+    ds = UFDS()
+    graph = Graph()
+
+    # create a set for each cell
+    ds.initSets(app.rows, app.cols)
+
+    # create a list of all walls (edges)
+    walls = list()
+    for row in range(app.rows):
+        for col in range(app.cols):
+            cell = row, col
+            _, neighbours = getNeighbours(app, app.rows, app.cols, row, col, set())
+            for neighbour in neighbours: 
+                walls.append( (cell, neighbour) )
+
+    newWalls = set()
+
+    # check through all list of edges/walls
+    # while walls != []: # while walls not empty
+    while len(walls) > minWallsCheck:
+        wall = random.choice(walls)
+        nodeA, nodeB = wall
+        rootA = ds.findParent(nodeA)
+        rootB = ds.findParent(nodeB)
+
+        # if nodes are in different sets
+        if rootA != rootB:
+            ds.union(rootA, rootB)
+            graph.addEdge(nodeA, nodeB)
+            newWalls.add(nodeA)
+            newWalls.add(nodeB)
+
+        walls.remove(wall)
+    
+    # graph output is used when constructing maze
+    # newWalls output is used for constructing walls
+    return graph, newWalls
 
 
-# def drawCell(app, canvas, row, col, cellColor):
-#     x = app.margin + col * app.cellWidth
-#     y = app.margin + row * app.cellHeight
-#     canvas.create_oval(x, y, x + app.cellWidth, y + app.cellHeight,
-#                             fill=cellColor)
 
-# def redrawAll(app, canvas):
-#     drawGraph(app, canvas, app.graph)
-#     for (row, col) in app.path:
-#         drawCell(app, canvas, row, col, "red")
+##############################################################################
+# DIJKSTRA ALGORITHM
+##############################################################################
 
-# runApp(width=400, height=400)
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithms
+# Queue documentation was also referenced: https://docs.python.org/3/library/queue.html
 
-####################################################
-# Code that doesn't work
-####################################################
+##############################################################################
 
 from queue import PriorityQueue
+import math
 
-# referenced from TA lecture: Graph Algorithm
-def dijksrta():
-    allNodes = {(0,0), (0,1), (1,1), (1,2), (2,0), (2,1), (2,2)}
-    graph = Graph()
-    graph.addEdge((0,0), (0,1))
-    graph.addEdge((0,1), (1,1))
-    graph.addEdge((1,1), (1,2))
-    graph.addEdge((1,1), (2,1))
-    graph.addEdge((2,1), (2,2))
-    graph.addEdge((2,1), (2,0))
-    startNode = (0,0)
-    targetNode = (10,0)
+def dijkstra(graph, startNode, targetNode, allNodes):
     visited = set()
     distance = dict() 
     solution = dict()
@@ -199,25 +314,76 @@ def dijksrta():
         distance[node] = 99999
     distance[startNode] = 0
     pq = PriorityQueue() # to be visited
-    pq.put(startNode, distance[startNode]) 
-    # how to ensure that priority queue sorts by second element
+    pq.put( (distance[startNode], startNode) )
     currNode = startNode
-    while currNode != targetNode:
-    # while not visited.empty():
-        currNode = pq.get()
+    while not pq.empty():
+        _, currNode = pq.get()
+        if currNode == targetNode: break
+        visited.add(currNode)
         for neighbour in graph.getNeighbours(currNode):
             if neighbour not in visited:
                 edge = graph.getEdge(currNode, neighbour)
-                if distance[currNode] + edge < distance[neighbour]:
-                    distance[neighbour] = distance[currNode] + edge
-                    if neighbour in pq: 
-                        pq.pop(neighbour)
-                    pq.put(neighbour, distance[neighbour])
+                newDist = distance[currNode] + edge 
+                if newDist < distance[neighbour]:
+                    distance[neighbour] = newDist
+                    pq.put( (distance[neighbour], neighbour) )
                     solution[neighbour] = currNode
                 visited.add(neighbour)
-        pq.pop(currNode)
-    print("done")
-    #print(solution)
+    solution = constructPath(solution, startNode, targetNode)
+    if solution != []: solution.pop()
+    return solution
 
-# dijksrta()
+##############################################################################
+# A* PATH FINDING
+##############################################################################
+
+# The following concepts and structual framework was referenced from TA lecture: 
+# Graph Algorithms
+#
+# Queue documentation was also referenced: https://docs.python.org/3/library/queue.html
+
+##############################################################################
+
+from queue import PriorityQueue
+import math
+
+def createAllNodes(app):
+    allNodes = set()
+    for row in range(app.rows):
+        for col in range(app.cols):
+            allNodes.add( (row, col) )
+    return allNodes
+
+def euclideanDistance(nodeA, nodeB):
+    return math.sqrt((nodeA[0]-nodeB[0])**2 + (nodeA[1]-nodeB[1])**2)
+
+def aStar(graph, startNode, targetNode, allNodes):
+    visited = set()
+    cost = dict() 
+    solution = dict()
+    for node in allNodes:
+        cost[node] = 99999
+    cost[startNode] = 0
+    pq = PriorityQueue() # to be visited
+    pq.put( (cost[startNode], startNode) )
+    currNode = startNode
+    while not pq.empty():
+        _, currNode = pq.get()
+        if currNode == targetNode: break
+        visited.add(currNode)
+        for neighbour in graph.getNeighbours(currNode):
+            if neighbour not in visited:
+                edge = graph.getEdge(currNode, neighbour)
+                newCost = cost[currNode] + edge + euclideanDistance(currNode, neighbour)
+                if newCost < cost[neighbour]:
+                    cost[neighbour] = newCost
+                    pq.put( (cost[neighbour], neighbour) )
+                    solution[neighbour] = currNode
+                visited.add(neighbour)
+    try:
+        solution = constructPath(solution, startNode, targetNode)
+    except:
+        solution = []
+    if solution != []: solution.pop()
+    return solution
 
